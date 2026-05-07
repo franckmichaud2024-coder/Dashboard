@@ -44,12 +44,26 @@ const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
-          persistSession: true,
-          autoRefreshToken: true,
+          persistSession: false,
+          autoRefreshToken: false,
           detectSessionInUrl: true,
         },
       })
     : null;
+
+
+function clearSupabaseAuthStorage() {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      const k = key.toLowerCase();
+      if (key.startsWith("sb-") || k.includes("supabase.auth") || k.includes("supabase")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch {
+    // no-op
+  }
+}
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn("Supabase non configuré. Vérifie VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.");
@@ -78,6 +92,7 @@ const DEFAULT_VISIBLE_KPIS = {
   alerteDerive: true,
   theoriqueDepuisDebut: true,
   efficaciteDepuisDebut: true,
+  efficaciteTheoriqueReel: true,
   heureFinEstimee: true,
   efficaciteGlobale: true,
   restantProduire: true,
@@ -86,6 +101,7 @@ const DEFAULT_VISIBLE_KPIS = {
 const KPI_OPTIONS = [
   ["alerteDerive", "Alerte dérive production"],
   ["efficaciteDepuisDebut", "Efficacité depuis début du quart"],
+  ["efficaciteTheoriqueReel", "Efficacité théorique / réel"],
   ["efficaciteGlobale", "Efficacité globale pondérée"],
   ["heureFinEstimee", "Heure fin estimée"],
   ["objectifTotal", "Objectif total théorique"],
@@ -288,6 +304,28 @@ function currentClock() {
   const s = String(d.getSeconds()).padStart(2, "0");
   return `${h} h ${m} min ${s} s`;
 }
+
+
+function clockFromDate(date) {
+  const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${h} h ${m} min ${s} s`;
+}
+
+function dateToHHMM(date) {
+  const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function makeDateFromHHMM(hhmm) {
+  const d = new Date();
+  const [h, m] = String(hhmm || "00:00").split(":").map(Number);
+  d.setHours(Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0, 0, 0);
+  return d;
+}
+
 
 function normalizeIntegerInput(value) {
   const digits = String(value ?? "").replace(/\D/g, "");
@@ -618,6 +656,19 @@ function Btn({ children, active, onClick, compact = false }) {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );
@@ -978,6 +1029,19 @@ function Gauge({ value, target = 92, compact = false }) {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1256,6 +1320,19 @@ function ChartTooltip({ active, payload, label }) {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1439,6 +1516,19 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1585,6 +1675,19 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );
@@ -1915,7 +2018,17 @@ function openHistoryGraphWindow(title, data) {
 
 function safeLoadHistoryImages() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+    const raw = JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+
+    // Compatibilité avec l'ancien format :
+    // avant = { rowId: "data:image/..." }
+    // maintenant = { rowId: ["data:image/...", "data:image/..."] }
+    return Object.fromEntries(
+      Object.entries(raw || {}).map(([key, value]) => [
+        key,
+        Array.isArray(value) ? value : value ? [value] : [],
+      ])
+    );
   } catch {
     return {};
   }
@@ -1985,30 +2098,62 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
     }, 1800);
   }
 
-  async function handleImageUpload(rowId, file) {
-    if (!file) return;
+  async function handleImageUpload(rowId, files) {
+    const selectedFiles = Array.from(files || []);
 
-    if (!file.type?.startsWith("image/")) {
-      alert("Choisis un fichier image seulement.");
+    if (!selectedFiles.length) return;
+
+    const imageFiles = selectedFiles.filter((file) => file.type?.startsWith("image/"));
+
+    if (!imageFiles.length) {
+      alert("Choisis un ou plusieurs fichiers image seulement.");
       return;
     }
 
     try {
-      const imageData = await resizeImageToDataUrl(file);
+      const imagesData = await Promise.all(
+        imageFiles.map((file) => resizeImageToDataUrl(file))
+      );
+
       setImageDrafts((prev) => {
-        const next = { ...prev, [rowId]: imageData };
+        const existing = Array.isArray(prev[rowId])
+          ? prev[rowId]
+          : prev[rowId]
+          ? [prev[rowId]]
+          : [];
+
+        const next = {
+          ...prev,
+          [rowId]: [...existing, ...imagesData],
+        };
+
         localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
         return next;
       });
     } catch {
-      alert("Impossible d'importer cette image.");
+      alert("Impossible d'importer une ou plusieurs images.");
     }
   }
 
-  function removeHistoryImage(rowId) {
+  function removeHistoryImage(rowId, imageIndex = null) {
     setImageDrafts((prev) => {
       const next = { ...prev };
-      delete next[rowId];
+
+      if (imageIndex === null) {
+        delete next[rowId];
+      } else {
+        const images = Array.isArray(next[rowId])
+          ? next[rowId]
+          : next[rowId]
+          ? [next[rowId]]
+          : [];
+
+        const updated = images.filter((_, index) => index !== imageIndex);
+
+        if (updated.length) next[rowId] = updated;
+        else delete next[rowId];
+      }
+
       localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
       return next;
     });
@@ -2237,16 +2382,20 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                             cursor: "pointer",
                           }}
                         >
-                          📎 Importer image
+                          📎 Importer images
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => handleImageUpload(row.id, e.target.files?.[0])}
+                            multiple
+                            onChange={(e) => {
+                              handleImageUpload(row.id, e.target.files);
+                              e.target.value = "";
+                            }}
                             style={{ display: "none" }}
                           />
                         </label>
 
-                        {imageDrafts[row.id] && (
+                        {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : imageDrafts[row.id] ? [imageDrafts[row.id]] : []).length > 0 && (
                           <>
                             <button
                               onClick={() => removeHistoryImage(row.id)}
@@ -2262,54 +2411,90 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                 cursor: "pointer",
                               }}
                             >
-                              Retirer image
+                              Retirer toutes
                             </button>
 
-                            <button
-                              onClick={() => setImagePreview(imageDrafts[row.id])}
-                              style={{
-                                height: 30,
-                                padding: "0 10px",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,216,77,0.25)",
-                                background: "rgba(90,68,14,0.35)",
-                                color: "#ffd84d",
-                                fontSize: 11,
-                                fontWeight: 900,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Ouvrir image
-                            </button>
+                            <div style={{ color: "#7f99ad", fontSize: 11, fontWeight: 900 }}>
+                              {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : [imageDrafts[row.id]]).length} image(s)
+                            </div>
                           </>
                         )}
                       </div>
 
-                      {imageDrafts[row.id] && (
+                      {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : imageDrafts[row.id] ? [imageDrafts[row.id]] : []).length > 0 && (
                         <div
-                          onClick={() => setImagePreview(imageDrafts[row.id])}
-                          title="Cliquer pour agrandir"
                           style={{
                             marginTop: 8,
-                            width: 120,
-                            height: 74,
-                            borderRadius: 10,
-                            overflow: "hidden",
-                            border: "1px solid rgba(120,190,255,0.18)",
-                            background: "rgba(6,18,34,0.82)",
-                            cursor: "pointer",
+                            display: "flex",
+                            gap: 8,
+                            flexWrap: "wrap",
+                            alignItems: "flex-start",
                           }}
                         >
-                          <img
-                            src={imageDrafts[row.id]}
-                            alt="Pièce jointe"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
+                          {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : [imageDrafts[row.id]]).map((imgData, imgIndex) => (
+                            <div key={`${row.id}-image-${imgIndex}`} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                              <div
+                                onClick={() => setImagePreview(imgData)}
+                                title="Cliquer pour agrandir"
+                                style={{
+                                  width: 120,
+                                  height: 74,
+                                  borderRadius: 10,
+                                  overflow: "hidden",
+                                  border: "1px solid rgba(120,190,255,0.18)",
+                                  background: "rgba(6,18,34,0.82)",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <img
+                                  src={imgData}
+                                  alt={`Pièce jointe ${imgIndex + 1}`}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                  }}
+                                />
+                              </div>
+
+                              <div style={{ display: "flex", gap: 5 }}>
+                                <button
+                                  onClick={() => setImagePreview(imgData)}
+                                  style={{
+                                    height: 24,
+                                    padding: "0 7px",
+                                    borderRadius: 7,
+                                    border: "1px solid rgba(255,216,77,0.25)",
+                                    background: "rgba(90,68,14,0.35)",
+                                    color: "#ffd84d",
+                                    fontSize: 10,
+                                    fontWeight: 900,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Ouvrir
+                                </button>
+
+                                <button
+                                  onClick={() => removeHistoryImage(row.id, imgIndex)}
+                                  style={{
+                                    height: 24,
+                                    padding: "0 7px",
+                                    borderRadius: 7,
+                                    border: "1px solid rgba(255,79,103,0.25)",
+                                    background: "rgba(90,20,30,0.35)",
+                                    color: "#ff97a6",
+                                    fontSize: 10,
+                                    fontWeight: 900,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Retirer
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
 
@@ -2425,7 +2610,7 @@ function HistoryGraphOnly({ title, data, compact = false }) {
       <div style={{ ...cardStyle, height: "calc(100vh - 36px)", padding: 18, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ color: "#39e8ff", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>{title}</div>
-          <button onClick={() => { window.location.href = "/"; }}>← Retour dashboard</button>
+          <button onClick={() => { navigateRoute("/"); }}>← Retour dashboard</button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -2639,6 +2824,9 @@ export default function App() {
   const boot = useMemo(() => safeLoad(), []);
   const [shift, setShift] = useState(boot.shift);
   const [stateByShift, setStateByShift] = useState(boot.data);
+  const [clockMode, setClockMode] = useState("real"); // real | simulated
+  const [manualTime, setManualTime] = useState(dateToHHMM(new Date()));
+  const [effectiveNow, setEffectiveNow] = useState(new Date());
   const [clock, setClock] = useState(currentClock());
   const [clockPaused, setClockPaused] = useState(false);
   const [pausedNow, setPausedNow] = useState(null);
@@ -2665,6 +2853,18 @@ export default function App() {
   const titleSize = mobileCompact ? 14 : 18;
   const clockSize = mobileCompact ? 16 : 24;
   const chartHeight = mobileCompact ? 220 : isTablet ? 240 : 260;
+  const [route, setRoute] = useState(() => window.location.pathname);
+
+  function navigateRoute(path) {
+    window.history.pushState({}, "", path);
+    setRoute(path);
+  }
+
+  useEffect(() => {
+    const onPopState = () => setRoute(window.location.pathname);
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -2675,6 +2875,11 @@ export default function App() {
     }
 
     async function initAuth() {
+      // Sécurité poste partagé :
+      // À chaque ouverture / rafraîchissement, on efface l'ancienne session sauvegardée.
+      // La session reste active seulement tant que la page actuelle reste ouverte.
+      clearSupabaseAuthStorage();
+
       const { data } = await supabase.auth.getSession();
 
       if (!mounted) return;
@@ -2717,9 +2922,32 @@ export default function App() {
   useEffect(() => {
     if (clockPaused) return undefined;
 
-    const id = setInterval(() => setClock(currentClock()), 1000);
+    if (clockMode === "real") {
+      const updateRealClock = () => {
+        const now = new Date();
+        setEffectiveNow(now);
+        setClock(clockFromDate(now));
+      };
+
+      updateRealClock();
+      const id = setInterval(updateRealClock, 1000);
+      return () => clearInterval(id);
+    }
+
+    const simulatedStart = makeDateFromHHMM(manualTime);
+    setEffectiveNow(simulatedStart);
+    setClock(clockFromDate(simulatedStart));
+
+    const id = setInterval(() => {
+      setEffectiveNow((prev) => {
+        const next = new Date((prev || simulatedStart).getTime() + 1000);
+        setClock(clockFromDate(next));
+        return next;
+      });
+    }, 1000);
+
     return () => clearInterval(id);
-  }, [clockPaused]);
+  }, [clockPaused, clockMode, manualTime]);
 
   useEffect(() => {
     try {
@@ -2861,14 +3089,13 @@ export default function App() {
     if (clockPaused) {
       setClockPaused(false);
       setPausedNow(null);
-      setClock(currentClock());
       return;
     }
 
-    const freeze = new Date();
+    const freeze = effectiveNow;
     setPausedNow(freeze);
     setClockPaused(true);
-    setClock(currentClock());
+    setClock(clockFromDate(freeze));
   }
 
   function updatePeriode(id, key, value) {
@@ -3139,8 +3366,8 @@ export default function App() {
   const ecartActuel = current.productionReelle - current.objectifReel;
   const minutesTotales = totalWorkMinutes(current.periodes);
 
-  const effectiveNow = clockPaused && pausedNow ? pausedNow : new Date();
-  const nowMinutes = effectiveNow.getHours() * 60 + effectiveNow.getMinutes();
+  const activeNow = clockPaused && pausedNow ? pausedNow : effectiveNow;
+  const nowMinutes = activeNow.getHours() * 60 + activeNow.getMinutes();
   const heureFinEstimee = estimateFinishTime(
     current.periodes,
     nowMinutes,
@@ -3156,6 +3383,18 @@ export default function App() {
     theoriqueDepuisDebutQuart > 0
       ? (Number(current.productionReelle || 0) / theoriqueDepuisDebutQuart) * 100
       : 0;
+
+  const efficaciteTheoriqueReel =
+    theoriqueDepuisDebutQuart > 0
+      ? (Number(current.productionReelle || 0) / theoriqueDepuisDebutQuart) * 100
+      : 0;
+
+  const efficaciteTheoriqueReelColor =
+    efficaciteTheoriqueReel >= 100
+      ? "#9df548"
+      : efficaciteTheoriqueReel >= 95
+      ? "#ffd84d"
+      : "#ff4f67";
 
   const chartData = useMemo(() => {
     let theoriqueCum = 0;
@@ -3390,6 +3629,19 @@ export default function App() {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -3473,7 +3725,7 @@ export default function App() {
   }
 
 
-  const currentPath = window.location.pathname;
+  const currentPath = route;
 
   if (currentPath === "/historique-jour") {
     return (
@@ -3489,7 +3741,7 @@ export default function App() {
       >
         <div style={{ marginBottom: 12, display: "flex", justifyContent: "flex-end" }}>
           <button
-            onClick={() => { window.location.href = "/"; }}
+            onClick={() => { navigateRoute("/"); }}
             style={{
               height: 40,
               padding: "0 16px",
@@ -3534,7 +3786,7 @@ export default function App() {
       >
         <div style={{ marginBottom: 12, display: "flex", justifyContent: "flex-end" }}>
           <button
-            onClick={() => { window.location.href = "/"; }}
+            onClick={() => { navigateRoute("/"); }}
             style={{
               height: 40,
               padding: "0 16px",
@@ -3871,7 +4123,7 @@ export default function App() {
                     Quart de soir
                   </Btn>
 <button
-                  onClick={() => window.location.href = "/historique-jour"}
+                  onClick={() => navigateRoute("/historique-jour")}
                   style={{
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
@@ -3892,7 +4144,7 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={() => window.location.href = "/historique-soir"}
+                  onClick={() => navigateRoute("/historique-soir")}
                   style={{
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
@@ -4040,6 +4292,98 @@ export default function App() {
                     Temps figé pour les calculs et l’heure fin estimée
                   </div>
                 )}
+
+                <div
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    marginTop: 10,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClockMode("real");
+                      setClockPaused(false);
+                      setPausedNow(null);
+                    }}
+                    style={{
+                      height: 30,
+                      padding: "0 12px",
+                      borderRadius: 999,
+                      border: clockMode === "real"
+                        ? "1px solid rgba(47,225,255,0.65)"
+                        : "1px solid rgba(255,255,255,0.14)",
+                      background: clockMode === "real"
+                        ? "rgba(47,225,255,0.18)"
+                        : "rgba(20,34,55,0.72)",
+                      color: "#eefaff",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontFamily: UI_FONT,
+                    }}
+                  >
+                    Heure réelle
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClockMode("simulated");
+                      setClockPaused(false);
+                      setPausedNow(null);
+                    }}
+                    style={{
+                      height: 30,
+                      padding: "0 12px",
+                      borderRadius: 999,
+                      border: clockMode === "simulated"
+                        ? "1px solid rgba(255,216,77,0.65)"
+                        : "1px solid rgba(255,255,255,0.14)",
+                      background: clockMode === "simulated"
+                        ? "rgba(255,216,77,0.18)"
+                        : "rgba(20,34,55,0.72)",
+                      color: clockMode === "simulated" ? "#ffd84d" : "#eefaff",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontFamily: UI_FONT,
+                    }}
+                  >
+                    Heure simulée
+                  </button>
+
+                  {clockMode === "simulated" && (
+                    <input
+                      type="time"
+                      value={manualTime}
+                      onChange={(e) => {
+                        setManualTime(e.target.value);
+                        setClockPaused(false);
+                        setPausedNow(null);
+                      }}
+                      style={{
+                        height: 30,
+                        width: 110,
+                        borderRadius: 999,
+                        border: "1px solid rgba(255,216,77,0.42)",
+                        background: "rgba(72,56,16,0.62)",
+                        color: "#ffd84d",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        padding: "0 10px",
+                        outline: "none",
+                        fontFamily: UI_FONT,
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -4292,6 +4636,19 @@ export default function App() {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );
@@ -4775,6 +5132,19 @@ export default function App() {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );

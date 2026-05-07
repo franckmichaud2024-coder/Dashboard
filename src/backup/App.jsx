@@ -17,6 +17,7 @@ const STORAGE_KEY = "dashboard_coupe_v18_pc_stable";
 const KPI_VISIBILITY_KEY = "dashboard_kpi_visibility_v1";
 const KPI_ORDER_KEY = "dashboard_kpi_order_v1";
 const HISTORY_KEY = "dashboard_historique_production_v1";
+const HISTORY_IMAGE_KEY = "dashboard_historique_images_v1";
 
 const UI_FONT = "Inter, Segoe UI, Roboto, Arial, sans-serif";
 
@@ -43,12 +44,26 @@ const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
-          persistSession: true,
-          autoRefreshToken: true,
+          persistSession: false,
+          autoRefreshToken: false,
           detectSessionInUrl: true,
         },
       })
     : null;
+
+
+function clearSupabaseAuthStorage() {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      const k = key.toLowerCase();
+      if (key.startsWith("sb-") || k.includes("supabase.auth") || k.includes("supabase")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch {
+    // no-op
+  }
+}
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn("Supabase non configuré. Vérifie VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.");
@@ -77,6 +92,7 @@ const DEFAULT_VISIBLE_KPIS = {
   alerteDerive: true,
   theoriqueDepuisDebut: true,
   efficaciteDepuisDebut: true,
+  efficaciteTheoriqueReel: true,
   heureFinEstimee: true,
   efficaciteGlobale: true,
   restantProduire: true,
@@ -85,6 +101,7 @@ const DEFAULT_VISIBLE_KPIS = {
 const KPI_OPTIONS = [
   ["alerteDerive", "Alerte dérive production"],
   ["efficaciteDepuisDebut", "Efficacité depuis début du quart"],
+  ["efficaciteTheoriqueReel", "Efficacité théorique / réel"],
   ["efficaciteGlobale", "Efficacité globale pondérée"],
   ["heureFinEstimee", "Heure fin estimée"],
   ["objectifTotal", "Objectif total théorique"],
@@ -287,6 +304,28 @@ function currentClock() {
   const s = String(d.getSeconds()).padStart(2, "0");
   return `${h} h ${m} min ${s} s`;
 }
+
+
+function clockFromDate(date) {
+  const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${h} h ${m} min ${s} s`;
+}
+
+function dateToHHMM(date) {
+  const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function makeDateFromHHMM(hhmm) {
+  const d = new Date();
+  const [h, m] = String(hhmm || "00:00").split(":").map(Number);
+  d.setHours(Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0, 0, 0);
+  return d;
+}
+
 
 function normalizeIntegerInput(value) {
   const digits = String(value ?? "").replace(/\D/g, "");
@@ -617,6 +656,19 @@ function Btn({ children, active, onClick, compact = false }) {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );
@@ -977,6 +1029,19 @@ function Gauge({ value, target = 92, compact = false }) {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1255,6 +1320,19 @@ function ChartTooltip({ active, payload, label }) {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1438,6 +1516,19 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1584,6 +1675,19 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );
@@ -1911,9 +2015,51 @@ function openHistoryGraphWindow(title, data) {
   win.document.close();
 }
 
+
+function safeLoadHistoryImages() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function resizeImageToDataUrl(file, maxWidth = 1200, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const width = Math.round(img.width * scale);
+        const height = Math.round(img.height * scale);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact = false }) {
   const [commentDrafts, setCommentDrafts] = useState({});
   const [commentStatus, setCommentStatus] = useState({});
+  const [imageDrafts, setImageDrafts] = useState(() => safeLoadHistoryImages());
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     setCommentDrafts((prev) => {
@@ -1941,6 +2087,36 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
       });
     }, 1800);
   }
+
+  async function handleImageUpload(rowId, file) {
+    if (!file) return;
+
+    if (!file.type?.startsWith("image/")) {
+      alert("Choisis un fichier image seulement.");
+      return;
+    }
+
+    try {
+      const imageData = await resizeImageToDataUrl(file);
+      setImageDrafts((prev) => {
+        const next = { ...prev, [rowId]: imageData };
+        localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+    } catch {
+      alert("Impossible d'importer cette image.");
+    }
+  }
+
+  function removeHistoryImage(rowId) {
+    setImageDrafts((prev) => {
+      const next = { ...prev };
+      delete next[rowId];
+      localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
   const maxProduction = Math.max(...data.map((d) => Number(d.production || 0)), 100);
 
   const moyenneCochons =
@@ -2138,6 +2314,108 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                           fontFamily: UI_FONT,
                         }}
                       />
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          marginTop: 8,
+                        }}
+                      >
+                        <label
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            height: 30,
+                            padding: "0 10px",
+                            borderRadius: 8,
+                            border: "1px solid rgba(57,232,255,0.30)",
+                            background: "rgba(12,72,98,0.36)",
+                            color: "#39e8ff",
+                            fontSize: 11,
+                            fontWeight: 900,
+                            cursor: "pointer",
+                          }}
+                        >
+                          📎 Importer image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(row.id, e.target.files?.[0])}
+                            style={{ display: "none" }}
+                          />
+                        </label>
+
+                        {imageDrafts[row.id] && (
+                          <>
+                            <button
+                              onClick={() => removeHistoryImage(row.id)}
+                              style={{
+                                height: 30,
+                                padding: "0 10px",
+                                borderRadius: 8,
+                                border: "1px solid rgba(255,79,103,0.25)",
+                                background: "rgba(90,20,30,0.35)",
+                                color: "#ff97a6",
+                                fontSize: 11,
+                                fontWeight: 900,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Retirer image
+                            </button>
+
+                            <button
+                              onClick={() => setImagePreview(imageDrafts[row.id])}
+                              style={{
+                                height: 30,
+                                padding: "0 10px",
+                                borderRadius: 8,
+                                border: "1px solid rgba(255,216,77,0.25)",
+                                background: "rgba(90,68,14,0.35)",
+                                color: "#ffd84d",
+                                fontSize: 11,
+                                fontWeight: 900,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Ouvrir image
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {imageDrafts[row.id] && (
+                        <div
+                          onClick={() => setImagePreview(imageDrafts[row.id])}
+                          title="Cliquer pour agrandir"
+                          style={{
+                            marginTop: 8,
+                            width: 120,
+                            height: 74,
+                            borderRadius: 10,
+                            overflow: "hidden",
+                            border: "1px solid rgba(120,190,255,0.18)",
+                            background: "rgba(6,18,34,0.82)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <img
+                            src={imageDrafts[row.id]}
+                            alt="Pièce jointe"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </div>
+                      )}
+
                       <div style={{ marginTop: 5, minHeight: 14, color: commentStatus[row.id] === "saved" ? "#9df548" : commentStatus[row.id] === "error" ? "#ff4f67" : "#7f99ad", fontSize: 10, fontWeight: 800 }}>
                         {commentStatus[row.id] === "dirty" ? "Modification non enregistrée" : commentStatus[row.id] === "saving" ? "Sauvegarde..." : commentStatus[row.id] === "saved" ? "✔ Commentaire enregistré" : commentStatus[row.id] === "error" ? "Erreur sauvegarde" : ""}
                       </div>
@@ -2164,7 +2442,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                       <button
                         title="Supprimer la ligne"
                         aria-label="Supprimer la ligne"
-                        onClick={() => onDelete(row.id)}
+                        onClick={() => { removeHistoryImage(row.id); onDelete(row.id); }}
                         style={{ border: "1px solid rgba(255,79,103,0.25)", background: "rgba(90,20,30,0.35)", color: "#ff97a6", borderRadius: 8, height: 34, width: 38, fontSize: 18, cursor: "pointer" }}
                       >🗑️</button>
                     </td>
@@ -2175,6 +2453,98 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
           </div>
         </>
       )}
+    {imagePreview && (
+      <div
+        onClick={() => setImagePreview(null)}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 99999,
+          background: "rgba(0,0,0,0.86)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "relative",
+            maxWidth: "94vw",
+            maxHeight: "92vh",
+            borderRadius: 16,
+            border: "1px solid rgba(57,232,255,0.35)",
+            background: "#020b16",
+            padding: 12,
+            boxShadow: "0 0 40px rgba(57,232,255,0.20)",
+          }}
+        >
+          <button
+            onClick={() => setImagePreview(null)}
+            style={{
+              position: "absolute",
+              top: -14,
+              right: -14,
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              border: "1px solid rgba(255,255,255,0.28)",
+              background: "rgba(90,20,30,0.95)",
+              color: "#fff",
+              fontSize: 18,
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+
+          <img
+            src={imagePreview}
+            alt="Image commentaire"
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "86vh",
+              objectFit: "contain",
+              display: "block",
+              borderRadius: 12,
+            }}
+          />
+        </div>
+      </div>
+    )}
+  </div>
+  );
+}
+
+
+function HistoryGraphOnly({ title, data, compact = false }) {
+  const maxProduction = Math.max(...data.map((d) => Number(d.production || 0)), 100);
+
+  return (
+    <div style={{ width: "100%", minHeight: "100vh", background: "#020b16", padding: 18, boxSizing: "border-box" }}>
+      <div style={{ ...cardStyle, height: "calc(100vh - 36px)", padding: 18, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ color: "#39e8ff", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>{title}</div>
+          <button onClick={() => { navigateRoute("/"); }}>← Retour dashboard</button>
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={data} margin={{ top: 20, right: 42, left: 12, bottom: 48 }}>
+              <CartesianGrid stroke="rgba(127,165,196,0.10)" strokeDasharray="3 3" />
+              <XAxis dataKey="date" tick={{ fill: "#8ea9bf", fontSize: 12 }} />
+              <YAxis yAxisId="left" domain={[0, Math.ceil(maxProduction / 500) * 500]} tick={{ fill: "#8ea9bf", fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 120]} tick={{ fill: "#ffd84d", fontSize: 12 }} />
+              <Tooltip content={<HistoryTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 13, color: "#b8d2e3", paddingTop: 12 }} />
+              <Area yAxisId="left" type="monotone" dataKey="production" name="Cochons produits" stroke="#46dbff" fill="#46dbff" fillOpacity={0.12} strokeWidth={3} />
+              <Line yAxisId="right" type="monotone" dataKey="efficacite" name="Efficacité %" stroke="#ffd84d" strokeWidth={3.5} dot={<HistoryDot />} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2372,6 +2742,9 @@ export default function App() {
   const boot = useMemo(() => safeLoad(), []);
   const [shift, setShift] = useState(boot.shift);
   const [stateByShift, setStateByShift] = useState(boot.data);
+  const [clockMode, setClockMode] = useState("real"); // real | simulated
+  const [manualTime, setManualTime] = useState(dateToHHMM(new Date()));
+  const [effectiveNow, setEffectiveNow] = useState(new Date());
   const [clock, setClock] = useState(currentClock());
   const [clockPaused, setClockPaused] = useState(false);
   const [pausedNow, setPausedNow] = useState(null);
@@ -2398,6 +2771,18 @@ export default function App() {
   const titleSize = mobileCompact ? 14 : 18;
   const clockSize = mobileCompact ? 16 : 24;
   const chartHeight = mobileCompact ? 220 : isTablet ? 240 : 260;
+  const [route, setRoute] = useState(() => window.location.pathname);
+
+  function navigateRoute(path) {
+    window.history.pushState({}, "", path);
+    setRoute(path);
+  }
+
+  useEffect(() => {
+    const onPopState = () => setRoute(window.location.pathname);
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -2407,22 +2792,27 @@ export default function App() {
       return undefined;
     }
 
-    // Sécurité poste partagé : à chaque ouverture / rafraîchissement du site,
-    // on efface l'ancienne session enregistrée dans le navigateur.
-    // Après une connexion réussie, l'utilisateur reste connecté seulement pour cette page ouverte.
-    async function forceLogoutOnOpen() {
-      await supabase.auth.signOut();
+    async function initAuth() {
+      // Sécurité poste partagé :
+      // À chaque ouverture / rafraîchissement, on efface l'ancienne session sauvegardée.
+      // La session reste active seulement tant que la page actuelle reste ouverte.
+      clearSupabaseAuthStorage();
+
+      const { data } = await supabase.auth.getSession();
+
       if (!mounted) return;
-      setSession(null);
+
+      setSession(data?.session || null);
       setAuthLoading(false);
     }
 
-    forceLogoutOnOpen();
+    initAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
+      setAuthLoading(false);
     });
 
     return () => {
@@ -2450,9 +2840,32 @@ export default function App() {
   useEffect(() => {
     if (clockPaused) return undefined;
 
-    const id = setInterval(() => setClock(currentClock()), 1000);
+    if (clockMode === "real") {
+      const updateRealClock = () => {
+        const now = new Date();
+        setEffectiveNow(now);
+        setClock(clockFromDate(now));
+      };
+
+      updateRealClock();
+      const id = setInterval(updateRealClock, 1000);
+      return () => clearInterval(id);
+    }
+
+    const simulatedStart = makeDateFromHHMM(manualTime);
+    setEffectiveNow(simulatedStart);
+    setClock(clockFromDate(simulatedStart));
+
+    const id = setInterval(() => {
+      setEffectiveNow((prev) => {
+        const next = new Date((prev || simulatedStart).getTime() + 1000);
+        setClock(clockFromDate(next));
+        return next;
+      });
+    }, 1000);
+
     return () => clearInterval(id);
-  }, [clockPaused]);
+  }, [clockPaused, clockMode, manualTime]);
 
   useEffect(() => {
     try {
@@ -2594,14 +3007,13 @@ export default function App() {
     if (clockPaused) {
       setClockPaused(false);
       setPausedNow(null);
-      setClock(currentClock());
       return;
     }
 
-    const freeze = new Date();
+    const freeze = effectiveNow;
     setPausedNow(freeze);
     setClockPaused(true);
-    setClock(currentClock());
+    setClock(clockFromDate(freeze));
   }
 
   function updatePeriode(id, key, value) {
@@ -2872,8 +3284,8 @@ export default function App() {
   const ecartActuel = current.productionReelle - current.objectifReel;
   const minutesTotales = totalWorkMinutes(current.periodes);
 
-  const effectiveNow = clockPaused && pausedNow ? pausedNow : new Date();
-  const nowMinutes = effectiveNow.getHours() * 60 + effectiveNow.getMinutes();
+  const activeNow = clockPaused && pausedNow ? pausedNow : effectiveNow;
+  const nowMinutes = activeNow.getHours() * 60 + activeNow.getMinutes();
   const heureFinEstimee = estimateFinishTime(
     current.periodes,
     nowMinutes,
@@ -2889,6 +3301,18 @@ export default function App() {
     theoriqueDepuisDebutQuart > 0
       ? (Number(current.productionReelle || 0) / theoriqueDepuisDebutQuart) * 100
       : 0;
+
+  const efficaciteTheoriqueReel =
+    theoriqueDepuisDebutQuart > 0
+      ? (Number(current.productionReelle || 0) / theoriqueDepuisDebutQuart) * 100
+      : 0;
+
+  const efficaciteTheoriqueReelColor =
+    efficaciteTheoriqueReel >= 100
+      ? "#9df548"
+      : efficaciteTheoriqueReel >= 95
+      ? "#ffd84d"
+      : "#ff4f67";
 
   const chartData = useMemo(() => {
     let theoriqueCum = 0;
@@ -3123,6 +3547,19 @@ export default function App() {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -3201,6 +3638,99 @@ export default function App() {
         }}
       >
         Chargement sécurisé...
+      </div>
+    );
+  }
+
+
+  const currentPath = route;
+
+  if (currentPath === "/historique-jour") {
+    return (
+      <div
+        style={{
+          width: "100%",
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at top right, rgba(57,232,255,0.12), transparent 32%), #020b16",
+          padding: mobileCompact ? 10 : 18,
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ marginBottom: 12, display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={() => { navigateRoute("/"); }}
+            style={{
+              height: 40,
+              padding: "0 16px",
+              borderRadius: 12,
+              border: "1px solid rgba(57,232,255,0.35)",
+              background: "linear-gradient(180deg, rgba(12,72,98,0.88), rgba(5,25,45,0.96))",
+              color: "#39e8ff",
+              fontSize: 13,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 0 18px rgba(57,232,255,0.12)",
+              fontFamily: UI_FONT,
+            }}
+          >
+            ← Retour dashboard
+          </button>
+        </div>
+
+        <HistoryChart
+          title="Historique quart de jour"
+          data={[...historyJour].sort(sortByDateAsc)}
+          onDelete={deleteHistoryEntry}
+          onClear={() => clearHistoryForShift("jour")}
+          onCommentSave={updateHistoryComment}
+          compact={false}
+        />
+      </div>
+    );
+  }
+
+  if (currentPath === "/historique-soir") {
+    return (
+      <div
+        style={{
+          width: "100%",
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at top right, rgba(255,216,77,0.10), transparent 32%), #020b16",
+          padding: mobileCompact ? 10 : 18,
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ marginBottom: 12, display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={() => { navigateRoute("/"); }}
+            style={{
+              height: 40,
+              padding: "0 16px",
+              borderRadius: 12,
+              border: "1px solid rgba(57,232,255,0.35)",
+              background: "linear-gradient(180deg, rgba(12,72,98,0.88), rgba(5,25,45,0.96))",
+              color: "#39e8ff",
+              fontSize: 13,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 0 18px rgba(57,232,255,0.12)",
+              fontFamily: UI_FONT,
+            }}
+          >
+            ← Retour dashboard
+          </button>
+        </div>
+
+        <HistoryChart
+          title="Historique quart de soir"
+          data={[...historySoir].sort(sortByDateAsc)}
+          onDelete={deleteHistoryEntry}
+          onClear={() => clearHistoryForShift("soir")}
+          onCommentSave={updateHistoryComment}
+          compact={false}
+        />
       </div>
     );
   }
@@ -3510,6 +4040,47 @@ export default function App() {
                   <Btn active={shift === "soir"} onClick={() => setShift("soir")} compact={mobileCompact}>
                     Quart de soir
                   </Btn>
+<button
+                  onClick={() => navigateRoute("/historique-jour")}
+                  style={{
+                    height: mobileCompact ? 38 : 44,
+                    padding: mobileCompact ? "0 14px" : "0 18px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(57,232,255,0.38)",
+                    background: "linear-gradient(180deg, rgba(12,72,98,0.92), rgba(5,25,45,0.96))",
+                    color: "#39e8ff",
+                    fontSize: mobileCompact ? 12 : 13,
+                    fontWeight: 900,
+                    letterSpacing: "0.035em",
+                    cursor: "pointer",
+                    boxShadow: "0 0 20px rgba(57,232,255,0.14)",
+                    whiteSpace: "nowrap",
+                    fontFamily: UI_FONT,
+                  }}
+                >
+                  📈 Historique jour
+                </button>
+
+                <button
+                  onClick={() => navigateRoute("/historique-soir")}
+                  style={{
+                    height: mobileCompact ? 38 : 44,
+                    padding: mobileCompact ? "0 14px" : "0 18px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(255,216,77,0.38)",
+                    background: "linear-gradient(180deg, rgba(90,68,14,0.82), rgba(5,25,45,0.96))",
+                    color: "#ffd84d",
+                    fontSize: mobileCompact ? 12 : 13,
+                    fontWeight: 900,
+                    letterSpacing: "0.035em",
+                    cursor: "pointer",
+                    boxShadow: "0 0 20px rgba(255,216,77,0.12)",
+                    whiteSpace: "nowrap",
+                    fontFamily: UI_FONT,
+                  }}
+                >
+                  🌙 Historique soir
+                </button>
                 </div>
               </div>
 
@@ -3639,6 +4210,98 @@ export default function App() {
                     Temps figé pour les calculs et l’heure fin estimée
                   </div>
                 )}
+
+                <div
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    marginTop: 10,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClockMode("real");
+                      setClockPaused(false);
+                      setPausedNow(null);
+                    }}
+                    style={{
+                      height: 30,
+                      padding: "0 12px",
+                      borderRadius: 999,
+                      border: clockMode === "real"
+                        ? "1px solid rgba(47,225,255,0.65)"
+                        : "1px solid rgba(255,255,255,0.14)",
+                      background: clockMode === "real"
+                        ? "rgba(47,225,255,0.18)"
+                        : "rgba(20,34,55,0.72)",
+                      color: "#eefaff",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontFamily: UI_FONT,
+                    }}
+                  >
+                    Heure réelle
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClockMode("simulated");
+                      setClockPaused(false);
+                      setPausedNow(null);
+                    }}
+                    style={{
+                      height: 30,
+                      padding: "0 12px",
+                      borderRadius: 999,
+                      border: clockMode === "simulated"
+                        ? "1px solid rgba(255,216,77,0.65)"
+                        : "1px solid rgba(255,255,255,0.14)",
+                      background: clockMode === "simulated"
+                        ? "rgba(255,216,77,0.18)"
+                        : "rgba(20,34,55,0.72)",
+                      color: clockMode === "simulated" ? "#ffd84d" : "#eefaff",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontFamily: UI_FONT,
+                    }}
+                  >
+                    Heure simulée
+                  </button>
+
+                  {clockMode === "simulated" && (
+                    <input
+                      type="time"
+                      value={manualTime}
+                      onChange={(e) => {
+                        setManualTime(e.target.value);
+                        setClockPaused(false);
+                        setPausedNow(null);
+                      }}
+                      style={{
+                        height: 30,
+                        width: 110,
+                        borderRadius: 999,
+                        border: "1px solid rgba(255,216,77,0.42)",
+                        background: "rgba(72,56,16,0.62)",
+                        color: "#ffd84d",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        padding: "0 10px",
+                        outline: "none",
+                        fontFamily: UI_FONT,
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -3674,7 +4337,11 @@ export default function App() {
                 <Btn onClick={toggleFactoryMode} active={factoryMode} compact={mobileCompact}>
                   Mode écran usine
                 </Btn>
+                
               </div>
+
+
+
 
               <button
                 onClick={resetCurrentShift}
@@ -3887,6 +4554,19 @@ export default function App() {
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
             valueColor="#ffd84d"
+            {...common}
+          />
+        );
+
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
             {...common}
           />
         );
@@ -4374,6 +5054,19 @@ export default function App() {
           />
         );
 
+      case "efficaciteTheoriqueReel":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité théorique / réel"
+            value={`${formatPercent(efficaciteTheoriqueReel)} %`}
+            subtitle="réel produit ÷ théorique depuis début"
+            valueColor={efficaciteTheoriqueReelColor}
+            highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -4689,7 +5382,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div style={{ marginTop: 10 }}>
+                <div style={{ display: "none" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Commentaire / note</div>
                   <textarea
                     value={manualComment}
@@ -4713,74 +5406,6 @@ export default function App() {
                     }}
                   />
                 </div>
-              </div>
-
-              <div style={{ marginBottom: 10 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 10,
-                    flexWrap: "wrap",
-                    marginBottom: 10,
-                  }}
-                >
-                  <button
-                    onClick={() => openHistoryGraphWindow("Historique quart de jour", [...historyJour].sort(sortByDateAsc))}
-                    style={{
-                      height: 34,
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      border: "1px solid rgba(57,232,255,0.28)",
-                      background: "linear-gradient(180deg, rgba(12,72,98,0.72), rgba(5,25,45,0.92))",
-                      color: "#39e8ff",
-                      fontSize: 12,
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      boxShadow: "0 0 18px rgba(57,232,255,0.12)",
-                    }}
-                  >
-                    📈 Ouvrir graphique jour
-                  </button>
-
-                  <button
-                    onClick={() => openHistoryGraphWindow("Historique quart de soir", [...historySoir].sort(sortByDateAsc))}
-                    style={{
-                      height: 34,
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      border: "1px solid rgba(255,216,77,0.28)",
-                      background: "linear-gradient(180deg, rgba(90,68,14,0.62), rgba(5,25,45,0.92))",
-                      color: "#ffd84d",
-                      fontSize: 12,
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      boxShadow: "0 0 18px rgba(255,216,77,0.12)",
-                    }}
-                  >
-                    🌙 Ouvrir graphique soir
-                  </button>
-                </div>
-
-                {shift === "jour" ? (
-                  <HistoryChart
-                    title="Historique quart de jour"
-                    data={[...historyJour].sort(sortByDateAsc)}
-                    onDelete={deleteHistoryEntry}
-                    onClear={() => clearHistoryForShift("jour")}
-                    onCommentSave={updateHistoryComment}
-                    compact={mobileCompact}
-                  />
-                ) : (
-                  <HistoryChart
-                    title="Historique quart de soir"
-                    data={[...historySoir].sort(sortByDateAsc)}
-                    onDelete={deleteHistoryEntry}
-                    onClear={() => clearHistoryForShift("soir")}
-                    onCommentSave={updateHistoryComment}
-                    compact={mobileCompact}
-                  />
-                )}
               </div>
             </div>
 
