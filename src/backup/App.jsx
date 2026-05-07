@@ -18,6 +18,7 @@ const KPI_VISIBILITY_KEY = "dashboard_kpi_visibility_v1";
 const KPI_ORDER_KEY = "dashboard_kpi_order_v1";
 const HISTORY_KEY = "dashboard_historique_production_v1";
 const HISTORY_IMAGE_KEY = "dashboard_historique_images_v1";
+const DASHBOARD_STATE_TABLE = "dashboard_state";
 
 const UI_FONT = "Inter, Segoe UI, Roboto, Arial, sans-serif";
 
@@ -2018,17 +2019,7 @@ function openHistoryGraphWindow(title, data) {
 
 function safeLoadHistoryImages() {
   try {
-    const raw = JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
-
-    // Compatibilité avec l'ancien format :
-    // avant = { rowId: "data:image/..." }
-    // maintenant = { rowId: ["data:image/...", "data:image/..."] }
-    return Object.fromEntries(
-      Object.entries(raw || {}).map(([key, value]) => [
-        key,
-        Array.isArray(value) ? value : value ? [value] : [],
-      ])
-    );
+    return JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
   } catch {
     return {};
   }
@@ -2098,62 +2089,30 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
     }, 1800);
   }
 
-  async function handleImageUpload(rowId, files) {
-    const selectedFiles = Array.from(files || []);
+  async function handleImageUpload(rowId, file) {
+    if (!file) return;
 
-    if (!selectedFiles.length) return;
-
-    const imageFiles = selectedFiles.filter((file) => file.type?.startsWith("image/"));
-
-    if (!imageFiles.length) {
-      alert("Choisis un ou plusieurs fichiers image seulement.");
+    if (!file.type?.startsWith("image/")) {
+      alert("Choisis un fichier image seulement.");
       return;
     }
 
     try {
-      const imagesData = await Promise.all(
-        imageFiles.map((file) => resizeImageToDataUrl(file))
-      );
-
+      const imageData = await resizeImageToDataUrl(file);
       setImageDrafts((prev) => {
-        const existing = Array.isArray(prev[rowId])
-          ? prev[rowId]
-          : prev[rowId]
-          ? [prev[rowId]]
-          : [];
-
-        const next = {
-          ...prev,
-          [rowId]: [...existing, ...imagesData],
-        };
-
+        const next = { ...prev, [rowId]: imageData };
         localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
         return next;
       });
     } catch {
-      alert("Impossible d'importer une ou plusieurs images.");
+      alert("Impossible d'importer cette image.");
     }
   }
 
-  function removeHistoryImage(rowId, imageIndex = null) {
+  function removeHistoryImage(rowId) {
     setImageDrafts((prev) => {
       const next = { ...prev };
-
-      if (imageIndex === null) {
-        delete next[rowId];
-      } else {
-        const images = Array.isArray(next[rowId])
-          ? next[rowId]
-          : next[rowId]
-          ? [next[rowId]]
-          : [];
-
-        const updated = images.filter((_, index) => index !== imageIndex);
-
-        if (updated.length) next[rowId] = updated;
-        else delete next[rowId];
-      }
-
+      delete next[rowId];
       localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
       return next;
     });
@@ -2382,20 +2341,16 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                             cursor: "pointer",
                           }}
                         >
-                          📎 Importer images
+                          📎 Importer image
                           <input
                             type="file"
                             accept="image/*"
-                            multiple
-                            onChange={(e) => {
-                              handleImageUpload(row.id, e.target.files);
-                              e.target.value = "";
-                            }}
+                            onChange={(e) => handleImageUpload(row.id, e.target.files?.[0])}
                             style={{ display: "none" }}
                           />
                         </label>
 
-                        {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : imageDrafts[row.id] ? [imageDrafts[row.id]] : []).length > 0 && (
+                        {imageDrafts[row.id] && (
                           <>
                             <button
                               onClick={() => removeHistoryImage(row.id)}
@@ -2411,90 +2366,54 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                 cursor: "pointer",
                               }}
                             >
-                              Retirer toutes
+                              Retirer image
                             </button>
 
-                            <div style={{ color: "#7f99ad", fontSize: 11, fontWeight: 900 }}>
-                              {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : [imageDrafts[row.id]]).length} image(s)
-                            </div>
+                            <button
+                              onClick={() => setImagePreview(imageDrafts[row.id])}
+                              style={{
+                                height: 30,
+                                padding: "0 10px",
+                                borderRadius: 8,
+                                border: "1px solid rgba(255,216,77,0.25)",
+                                background: "rgba(90,68,14,0.35)",
+                                color: "#ffd84d",
+                                fontSize: 11,
+                                fontWeight: 900,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Ouvrir image
+                            </button>
                           </>
                         )}
                       </div>
 
-                      {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : imageDrafts[row.id] ? [imageDrafts[row.id]] : []).length > 0 && (
+                      {imageDrafts[row.id] && (
                         <div
+                          onClick={() => setImagePreview(imageDrafts[row.id])}
+                          title="Cliquer pour agrandir"
                           style={{
                             marginTop: 8,
-                            display: "flex",
-                            gap: 8,
-                            flexWrap: "wrap",
-                            alignItems: "flex-start",
+                            width: 120,
+                            height: 74,
+                            borderRadius: 10,
+                            overflow: "hidden",
+                            border: "1px solid rgba(120,190,255,0.18)",
+                            background: "rgba(6,18,34,0.82)",
+                            cursor: "pointer",
                           }}
                         >
-                          {(Array.isArray(imageDrafts[row.id]) ? imageDrafts[row.id] : [imageDrafts[row.id]]).map((imgData, imgIndex) => (
-                            <div key={`${row.id}-image-${imgIndex}`} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                              <div
-                                onClick={() => setImagePreview(imgData)}
-                                title="Cliquer pour agrandir"
-                                style={{
-                                  width: 120,
-                                  height: 74,
-                                  borderRadius: 10,
-                                  overflow: "hidden",
-                                  border: "1px solid rgba(120,190,255,0.18)",
-                                  background: "rgba(6,18,34,0.82)",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <img
-                                  src={imgData}
-                                  alt={`Pièce jointe ${imgIndex + 1}`}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block",
-                                  }}
-                                />
-                              </div>
-
-                              <div style={{ display: "flex", gap: 5 }}>
-                                <button
-                                  onClick={() => setImagePreview(imgData)}
-                                  style={{
-                                    height: 24,
-                                    padding: "0 7px",
-                                    borderRadius: 7,
-                                    border: "1px solid rgba(255,216,77,0.25)",
-                                    background: "rgba(90,68,14,0.35)",
-                                    color: "#ffd84d",
-                                    fontSize: 10,
-                                    fontWeight: 900,
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Ouvrir
-                                </button>
-
-                                <button
-                                  onClick={() => removeHistoryImage(row.id, imgIndex)}
-                                  style={{
-                                    height: 24,
-                                    padding: "0 7px",
-                                    borderRadius: 7,
-                                    border: "1px solid rgba(255,79,103,0.25)",
-                                    background: "rgba(90,20,30,0.35)",
-                                    color: "#ff97a6",
-                                    fontSize: 10,
-                                    fontWeight: 900,
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Retirer
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                          <img
+                            src={imageDrafts[row.id]}
+                            alt="Pièce jointe"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
                         </div>
                       )}
 
@@ -2843,6 +2762,7 @@ export default function App() {
   const [manualEfficiency, setManualEfficiency] = useState("");
   const [manualComment, setManualComment] = useState("");
   const [draggedKpi, setDraggedKpi] = useState(null);
+  const [dashboardCloudLoaded, setDashboardCloudLoaded] = useState(false);
   const { isMobile, isTablet } = useResponsive();
 
   const inputStyle = normalInputStyle(isMobile);
@@ -2955,7 +2875,27 @@ export default function App() {
     } catch {
       // no-op
     }
-  }, [shift, stateByShift]);
+
+    if (!supabase || !session?.user || !dashboardCloudLoaded) return undefined;
+
+    const timer = setTimeout(async () => {
+      const payload = {
+        user_id: session.user.id,
+        state: { shift, data: stateByShift },
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from(DASHBOARD_STATE_TABLE)
+        .upsert(payload, { onConflict: "user_id" });
+
+      if (error) {
+        console.error("Erreur sauvegarde état dashboard Supabase :", error.message);
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [shift, stateByShift, session?.user?.id, dashboardCloudLoaded]);
 
   useEffect(() => {
     try {
@@ -2981,6 +2921,45 @@ export default function App() {
     }
   }, [history]);
 
+  async function loadDashboardStateFromSupabase() {
+    if (!supabase || !session?.user) {
+      setDashboardCloudLoaded(true);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from(DASHBOARD_STATE_TABLE)
+      .select("state")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erreur lecture état dashboard Supabase :", error.message);
+      setDashboardCloudLoaded(true);
+      return;
+    }
+
+    const cloudState = data?.state;
+
+    if (
+      cloudState &&
+      (cloudState.shift === "jour" || cloudState.shift === "soir") &&
+      cloudState.data?.jour &&
+      cloudState.data?.soir
+    ) {
+      setShift(cloudState.shift);
+      setStateByShift(cloudState.data);
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudState));
+      } catch {
+        // no-op
+      }
+    }
+
+    setDashboardCloudLoaded(true);
+  }
+
   async function loadHistoryFromSupabase() {
     if (!supabase || !session?.user) return;
 
@@ -2999,12 +2978,15 @@ export default function App() {
   }
 
   useEffect(() => {
+    setDashboardCloudLoaded(false);
+    loadDashboardStateFromSupabase();
     loadHistoryFromSupabase();
   }, [session?.user?.id]);
 
   async function handleLogout() {
     if (!supabase) return;
     await supabase.auth.signOut();
+    setDashboardCloudLoaded(false);
     setSession(null);
   }
 

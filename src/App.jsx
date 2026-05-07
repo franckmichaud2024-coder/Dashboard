@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import {
   ResponsiveContainer,
@@ -2763,6 +2763,9 @@ export default function App() {
   const [manualComment, setManualComment] = useState("");
   const [draggedKpi, setDraggedKpi] = useState(null);
   const [dashboardCloudLoaded, setDashboardCloudLoaded] = useState(false);
+  const sessionRef = useRef(null);
+  const saveDashboardTimerRef = useRef(null);
+  const dashboardCloudLoadedRef = useRef(false);
   const { isMobile, isTablet } = useResponsive();
 
   const inputStyle = normalInputStyle(isMobile);
@@ -2784,6 +2787,22 @@ export default function App() {
     const onPopState = () => setRoute(window.location.pathname);
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    dashboardCloudLoadedRef.current = dashboardCloudLoaded;
+  }, [dashboardCloudLoaded]);
+
+  useEffect(() => {
+    return () => {
+      if (saveDashboardTimerRef.current) {
+        clearTimeout(saveDashboardTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -2875,27 +2894,7 @@ export default function App() {
     } catch {
       // no-op
     }
-
-    if (!supabase || !session?.user || !dashboardCloudLoaded) return undefined;
-
-    const timer = setTimeout(async () => {
-      const payload = {
-        user_id: session.user.id,
-        state: { shift, data: stateByShift },
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from(DASHBOARD_STATE_TABLE)
-        .upsert(payload, { onConflict: "user_id" });
-
-      if (error) {
-        console.error("Erreur sauvegarde état dashboard Supabase :", error.message);
-      }
-    }, 700);
-
-    return () => clearTimeout(timer);
-  }, [shift, stateByShift, session?.user?.id, dashboardCloudLoaded]);
+  }, [shift, stateByShift]);
 
   useEffect(() => {
     try {
@@ -2924,6 +2923,7 @@ export default function App() {
   async function loadDashboardStateFromSupabase() {
     if (!supabase || !session?.user) {
       setDashboardCloudLoaded(true);
+      dashboardCloudLoadedRef.current = true;
       return;
     }
 
@@ -2936,6 +2936,7 @@ export default function App() {
     if (error) {
       console.error("Erreur lecture état dashboard Supabase :", error.message);
       setDashboardCloudLoaded(true);
+      dashboardCloudLoadedRef.current = true;
       return;
     }
 
@@ -2958,6 +2959,43 @@ export default function App() {
     }
 
     setDashboardCloudLoaded(true);
+    dashboardCloudLoadedRef.current = true;
+  }
+
+  async function saveDashboardStateToSupabase(nextShift, nextData, delay = 350) {
+    const activeSession = sessionRef.current;
+
+    if (!supabase || !activeSession?.user || !dashboardCloudLoadedRef.current) {
+      return;
+    }
+
+    if (saveDashboardTimerRef.current) {
+      clearTimeout(saveDashboardTimerRef.current);
+    }
+
+    saveDashboardTimerRef.current = setTimeout(async () => {
+      const payload = {
+        user_id: activeSession.user.id,
+        state: { shift: nextShift, data: nextData },
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from(DASHBOARD_STATE_TABLE)
+        .upsert(payload, { onConflict: "user_id" });
+
+      if (error) {
+        console.error("Erreur sauvegarde dashboard_state Supabase :", error.message);
+        window.__dashboardSyncLastError = error.message;
+      } else {
+        window.__dashboardSyncLastSave = payload.updated_at;
+      }
+    }, delay);
+  }
+
+  function changeShift(nextShift) {
+    setShift(nextShift);
+    saveDashboardStateToSupabase(nextShift, stateByShift, 0);
   }
 
   async function loadHistoryFromSupabase() {
@@ -3061,10 +3099,15 @@ export default function App() {
   }
 
   function updateShiftData(patch) {
-    setStateByShift((prev) => ({
-      ...prev,
-      [shift]: { ...prev[shift], ...patch },
-    }));
+    setStateByShift((prev) => {
+      const nextData = {
+        ...prev,
+        [shift]: { ...prev[shift], ...patch },
+      };
+
+      saveDashboardStateToSupabase(shift, nextData);
+      return nextData;
+    });
   }
 
   function toggleClockPause() {
@@ -4098,10 +4141,10 @@ export default function App() {
                     alignItems: "center",
                   }}
                 >
-                  <Btn active={shift === "jour"} onClick={() => setShift("jour")} compact={mobileCompact}>
+                  <Btn active={shift === "jour"} onClick={() => changeShift("jour")} compact={mobileCompact}>
                     Quart de jour
                   </Btn>
-                  <Btn active={shift === "soir"} onClick={() => setShift("soir")} compact={mobileCompact}>
+                  <Btn active={shift === "soir"} onClick={() => changeShift("soir")} compact={mobileCompact}>
                     Quart de soir
                   </Btn>
 <button
