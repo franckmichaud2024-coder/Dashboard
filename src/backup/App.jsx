@@ -2019,7 +2019,16 @@ function openHistoryGraphWindow(title, data) {
 
 function safeLoadHistoryImages() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+    const raw = JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+
+    // Ancien format : { rowId: "data:image/..." }
+    // Nouveau format : { rowId: ["data:image/...", "data:image/..."] }
+    return Object.fromEntries(
+      Object.entries(raw || {}).map(([rowId, value]) => [
+        rowId,
+        Array.isArray(value) ? value : value ? [value] : [],
+      ])
+    );
   } catch {
     return {};
   }
@@ -2089,30 +2098,65 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
     }, 1800);
   }
 
-  async function handleImageUpload(rowId, file) {
-    if (!file) return;
+  async function handleImageUpload(rowId, filesOrFile) {
+    const selectedFiles =
+      filesOrFile instanceof File
+        ? [filesOrFile]
+        : Array.from(filesOrFile || []);
 
-    if (!file.type?.startsWith("image/")) {
-      alert("Choisis un fichier image seulement.");
+    if (!selectedFiles.length) return;
+
+    const imageFiles = selectedFiles.filter((file) => file.type?.startsWith("image/"));
+
+    if (!imageFiles.length) {
+      alert("Choisis un ou plusieurs fichiers image seulement.");
       return;
     }
 
     try {
-      const imageData = await resizeImageToDataUrl(file);
+      const imagesData = await Promise.all(
+        imageFiles.map((file) => resizeImageToDataUrl(file))
+      );
+
       setImageDrafts((prev) => {
-        const next = { ...prev, [rowId]: imageData };
+        const existing = Array.isArray(prev[rowId])
+          ? prev[rowId]
+          : prev[rowId]
+          ? [prev[rowId]]
+          : [];
+
+        const next = {
+          ...prev,
+          [rowId]: [...existing, ...imagesData],
+        };
+
         localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
         return next;
       });
     } catch {
-      alert("Impossible d'importer cette image.");
+      alert("Impossible d'importer une ou plusieurs images.");
     }
   }
 
-  function removeHistoryImage(rowId) {
+  function removeHistoryImage(rowId, imageIndex = null) {
     setImageDrafts((prev) => {
       const next = { ...prev };
-      delete next[rowId];
+
+      if (imageIndex === null) {
+        delete next[rowId];
+      } else {
+        const images = Array.isArray(next[rowId])
+          ? next[rowId]
+          : next[rowId]
+          ? [next[rowId]]
+          : [];
+
+        const updated = images.filter((_, index) => index !== imageIndex);
+
+        if (updated.length) next[rowId] = updated;
+        else delete next[rowId];
+      }
+
       localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
       return next;
     });
@@ -2325,97 +2369,196 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                           marginTop: 8,
                         }}
                       >
-                        <label
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            height: 30,
-                            padding: "0 10px",
-                            borderRadius: 8,
-                            border: "1px solid rgba(57,232,255,0.30)",
-                            background: "rgba(12,72,98,0.36)",
-                            color: "#39e8ff",
-                            fontSize: 11,
-                            fontWeight: 900,
-                            cursor: "pointer",
-                          }}
-                        >
-                          📎 Importer image
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(row.id, e.target.files?.[0])}
-                            style={{ display: "none" }}
-                          />
-                        </label>
+                        {(() => {
+                          const rowImages = Array.isArray(imageDrafts[row.id])
+                            ? imageDrafts[row.id]
+                            : imageDrafts[row.id]
+                            ? [imageDrafts[row.id]]
+                            : [];
 
-                        {imageDrafts[row.id] && (
-                          <>
-                            <button
-                              onClick={() => removeHistoryImage(row.id)}
-                              style={{
-                                height: 30,
-                                padding: "0 10px",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,79,103,0.25)",
-                                background: "rgba(90,20,30,0.35)",
-                                color: "#ff97a6",
-                                fontSize: 11,
-                                fontWeight: 900,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Retirer image
-                            </button>
+                          return (
+                            <>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 8,
+                                  alignItems: "center",
+                                  marginTop: 8,
+                                }}
+                              >
+                                <label
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    height: 30,
+                                    padding: "0 10px",
+                                    borderRadius: 8,
+                                    border: "1px solid rgba(57,232,255,0.30)",
+                                    background: "rgba(12,72,98,0.36)",
+                                    color: "#39e8ff",
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  📎 Ajouter photo(s)
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple={true}
+                                    onChange={(e) => {
+                                      handleImageUpload(row.id, e.currentTarget.files);
+                                      e.currentTarget.value = "";
+                                    }}
+                                    style={{ display: "none" }}
+                                  />
+                                </label>
 
-                            <button
-                              onClick={() => setImagePreview(imageDrafts[row.id])}
-                              style={{
-                                height: 30,
-                                padding: "0 10px",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,216,77,0.25)",
-                                background: "rgba(90,68,14,0.35)",
-                                color: "#ffd84d",
-                                fontSize: 11,
-                                fontWeight: 900,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Ouvrir image
-                            </button>
-                          </>
-                        )}
+                                {rowImages.length > 0 && (
+                                  <>
+                                    <div
+                                      style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        height: 30,
+                                        padding: "0 9px",
+                                        borderRadius: 8,
+                                        border: "1px solid rgba(255,216,77,0.24)",
+                                        background: "rgba(74,56,12,0.30)",
+                                        color: "#ffd84d",
+                                        fontSize: 11,
+                                        fontWeight: 900,
+                                      }}
+                                    >
+                                      🖼️ {rowImages.length} photo{rowImages.length > 1 ? "s" : ""}
+                                    </div>
+
+                                    <button
+                                      onClick={() => removeHistoryImage(row.id)}
+                                      style={{
+                                        height: 30,
+                                        padding: "0 10px",
+                                        borderRadius: 8,
+                                        border: "1px solid rgba(255,79,103,0.25)",
+                                        background: "rgba(90,20,30,0.35)",
+                                        color: "#ff97a6",
+                                        fontSize: 11,
+                                        fontWeight: 900,
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      Retirer tout
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+
+                              {rowImages.length > 0 && (
+                                <div
+                                  style={{
+                                    marginTop: 10,
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(54px, 54px))",
+                                    gap: 8,
+                                    alignItems: "center",
+                                    maxWidth: 380,
+                                  }}
+                                >
+                                  {rowImages.map((imgData, imgIndex) => (
+                                    <div
+                                      key={`${row.id}-photo-${imgIndex}`}
+                                      style={{
+                                        width: 54,
+                                        height: 54,
+                                        position: "relative",
+                                        borderRadius: 8,
+                                        border: "1px solid rgba(57,232,255,0.34)",
+                                        background:
+                                          "linear-gradient(180deg, rgba(7,28,49,0.94), rgba(2,12,24,0.98))",
+                                        boxShadow: "0 0 16px rgba(57,232,255,0.10)",
+                                        overflow: "hidden",
+                                      }}
+                                      title={`Photo ${imgIndex + 1}`}
+                                    >
+                                      <button
+                                        onClick={() => setImagePreview(imgData)}
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          border: "none",
+                                          padding: 0,
+                                          margin: 0,
+                                          cursor: "pointer",
+                                          background: "transparent",
+                                        }}
+                                      >
+                                        <img
+                                          src={imgData}
+                                          alt={`Photo ${imgIndex + 1}`}
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block",
+                                          }}
+                                        />
+                                      </button>
+
+                                      <div
+                                        style={{
+                                          position: "absolute",
+                                          left: 3,
+                                          top: 3,
+                                          minWidth: 17,
+                                          height: 17,
+                                          borderRadius: 999,
+                                          background: "rgba(0,0,0,0.72)",
+                                          color: "#ffd84d",
+                                          fontSize: 10,
+                                          fontWeight: 900,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          padding: "0 4px",
+                                          pointerEvents: "none",
+                                        }}
+                                      >
+                                        {imgIndex + 1}
+                                      </div>
+
+                                      <button
+                                        onClick={() => removeHistoryImage(row.id, imgIndex)}
+                                        title="Retirer cette photo"
+                                        style={{
+                                          position: "absolute",
+                                          right: 3,
+                                          top: 3,
+                                          width: 17,
+                                          height: 17,
+                                          borderRadius: 999,
+                                          border: "1px solid rgba(255,255,255,0.18)",
+                                          background: "rgba(90,20,30,0.90)",
+                                          color: "#fff",
+                                          fontSize: 11,
+                                          fontWeight: 900,
+                                          lineHeight: "15px",
+                                          cursor: "pointer",
+                                          padding: 0,
+                                        }}
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
-
-                      {imageDrafts[row.id] && (
-                        <div
-                          onClick={() => setImagePreview(imageDrafts[row.id])}
-                          title="Cliquer pour agrandir"
-                          style={{
-                            marginTop: 8,
-                            width: 120,
-                            height: 74,
-                            borderRadius: 10,
-                            overflow: "hidden",
-                            border: "1px solid rgba(120,190,255,0.18)",
-                            background: "rgba(6,18,34,0.82)",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <img
-                            src={imageDrafts[row.id]}
-                            alt="Pièce jointe"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      )}
 
                       <div style={{ marginTop: 5, minHeight: 14, color: commentStatus[row.id] === "saved" ? "#9df548" : commentStatus[row.id] === "error" ? "#ff4f67" : "#7f99ad", fontSize: 10, fontWeight: 800 }}>
                         {commentStatus[row.id] === "dirty" ? "Modification non enregistrée" : commentStatus[row.id] === "saving" ? "Sauvegarde..." : commentStatus[row.id] === "saved" ? "✔ Commentaire enregistré" : commentStatus[row.id] === "error" ? "Erreur sauvegarde" : ""}

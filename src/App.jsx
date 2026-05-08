@@ -19,6 +19,7 @@ const KPI_ORDER_KEY = "dashboard_kpi_order_v1";
 const HISTORY_KEY = "dashboard_historique_production_v1";
 const HISTORY_IMAGE_KEY = "dashboard_historique_images_v1";
 const DASHBOARD_STATE_TABLE = "dashboard_state";
+const DASHBOARD_IMAGES_BUCKET = "dashboard-images";
 
 const UI_FONT = "Inter, Segoe UI, Roboto, Arial, sans-serif";
 
@@ -254,6 +255,17 @@ function performanceColor(value) {
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function safeStorageFileName(name) {
+  const clean = String(name || "photo.jpg")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(-90);
+
+  return clean || "photo.jpg";
 }
 
 
@@ -2065,10 +2077,11 @@ function resizeImageToDataUrl(file, maxWidth = 1200, quality = 0.72) {
   });
 }
 
-function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact = false }) {
+function HistoryChart({ title, data, onDelete, onClear, onCommentSave, session, compact = false }) {
   const [commentDrafts, setCommentDrafts] = useState({});
   const [commentStatus, setCommentStatus] = useState({});
   const [imageDrafts, setImageDrafts] = useState(() => safeLoadHistoryImages());
+  const [imageStatus, setImageStatus] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
@@ -2098,6 +2111,81 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
     }, 1800);
   }
 
+  function normalizeImageItems(value) {
+    if (!value) return [];
+
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => (typeof item === "string" ? { url: item, path: null } : item))
+        .filter((item) => item?.url);
+    }
+
+    if (typeof value === "string") return [{ url: value, path: null }];
+    if (value?.url) return [value];
+
+    return [];
+  }
+
+  async function loadHistoryImagesFromStorage() {
+    if (!supabase || !session?.user) {
+      setImageDrafts(safeLoadHistoryImages());
+      return;
+    }
+
+    const rows = Array.isArray(data) ? data : [];
+    const next = {};
+
+    await Promise.all(
+      rows.map(async (row) => {
+        const folder = `${session.user.id}/${row.id}`;
+
+        const { data: files, error } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .list(folder, {
+            limit: 100,
+            sortBy: { column: "created_at", order: "asc" },
+          });
+
+        if (error || !files?.length) {
+          next[row.id] = normalizeImageItems(safeLoadHistoryImages()[row.id]);
+          return;
+        }
+
+        const paths = files
+          .filter((file) => file?.name && !file.name.endsWith("/"))
+          .map((file) => `${folder}/${file.name}`);
+
+        if (!paths.length) {
+          next[row.id] = [];
+          return;
+        }
+
+        const { data: signed, error: signedError } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .createSignedUrls(paths, 60 * 60 * 24 * 7);
+
+        if (signedError) {
+          console.error("Erreur création URL signée Supabase Storage :", signedError.message);
+          next[row.id] = [];
+          return;
+        }
+
+        next[row.id] = (signed || [])
+          .map((item, index) => ({
+            path: paths[index],
+            url: item?.signedUrl,
+          }))
+          .filter((item) => item.url);
+      })
+    );
+
+    setImageDrafts(next);
+  }
+
+  useEffect(() => {
+    loadHistoryImagesFromStorage();
+  }, [session?.user?.id, data.map((row) => row.id).join("|")]);
+
   async function handleImageUpload(rowId, filesOrFile) {
     const selectedFiles =
       filesOrFile instanceof File
@@ -2113,45 +2201,91 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
       return;
     }
 
+    if (!supabase || !session?.user) {
+      alert("Connexion Supabase requise pour synchroniser les photos entre les PC.");
+      return;
+    }
+
+    setImageStatus((prev) => ({ ...prev, [rowId]: "uploading" }));
+
     try {
-      const imagesData = await Promise.all(
-        imageFiles.map((file) => resizeImageToDataUrl(file))
-      );
+      const uploadedItems = [];
+
+      for (const [index, file] of imageFiles.entries()) {
+        const extension = safeStorageFileName(file.name).split(".").pop() || "jpg";
+        const filePath = `${session.user.id}/${rowId}/${Date.now()}_${index}_${typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)}.${extension}`;
+
+        const { error } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .upload(filePath, file, {
+            contentType: file.type || "image/jpeg",
+            upsert: false,
+          });
+
+        if (error) throw error;
+
+        const { data: signed, error: signedError } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+        if (signedError) throw signedError;
+
+        uploadedItems.push({
+          path: filePath,
+          url: signed?.signedUrl,
+        });
+      }
 
       setImageDrafts((prev) => {
-        const existing = Array.isArray(prev[rowId])
-          ? prev[rowId]
-          : prev[rowId]
-          ? [prev[rowId]]
-          : [];
-
+        const existing = normalizeImageItems(prev[rowId]);
         const next = {
           ...prev,
-          [rowId]: [...existing, ...imagesData],
+          [rowId]: [...existing, ...uploadedItems.filter((item) => item.url)],
         };
 
         localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
         return next;
       });
-    } catch {
-      alert("Impossible d'importer une ou plusieurs images.");
+
+      setImageStatus((prev) => ({ ...prev, [rowId]: "saved" }));
+
+      setTimeout(() => {
+        setImageStatus((prev) => {
+          const next = { ...prev };
+          if (next[rowId] === "saved") delete next[rowId];
+          return next;
+        });
+      }, 1800);
+    } catch (error) {
+      console.error("Erreur upload Supabase Storage :", error);
+      setImageStatus((prev) => ({ ...prev, [rowId]: "error" }));
+      alert("Impossible d'importer une ou plusieurs images dans Supabase Storage : " + (error?.message || ""));
     }
   }
 
-  function removeHistoryImage(rowId, imageIndex = null) {
+  async function removeHistoryImage(rowId, imageIndex = null) {
+    const currentImages = normalizeImageItems(imageDrafts[rowId]);
+    const toRemove = imageIndex === null ? currentImages : currentImages.filter((_, index) => index === imageIndex);
+    const pathsToRemove = toRemove.map((item) => item.path).filter(Boolean);
+
+    if (supabase && session?.user && pathsToRemove.length) {
+      const { error } = await supabase.storage
+        .from(DASHBOARD_IMAGES_BUCKET)
+        .remove(pathsToRemove);
+
+      if (error) {
+        alert("Erreur suppression photo Supabase Storage : " + error.message);
+        return;
+      }
+    }
+
     setImageDrafts((prev) => {
       const next = { ...prev };
 
       if (imageIndex === null) {
         delete next[rowId];
       } else {
-        const images = Array.isArray(next[rowId])
-          ? next[rowId]
-          : next[rowId]
-          ? [next[rowId]]
-          : [];
-
-        const updated = images.filter((_, index) => index !== imageIndex);
+        const updated = normalizeImageItems(next[rowId]).filter((_, index) => index !== imageIndex);
 
         if (updated.length) next[rowId] = updated;
         else delete next[rowId];
@@ -2370,11 +2504,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                         }}
                       >
                         {(() => {
-                          const rowImages = Array.isArray(imageDrafts[row.id])
-                            ? imageDrafts[row.id]
-                            : imageDrafts[row.id]
-                            ? [imageDrafts[row.id]]
-                            : [];
+                          const rowImages = normalizeImageItems(imageDrafts[row.id]);
 
                           return (
                             <>
@@ -2484,7 +2614,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                       title={`Photo ${imgIndex + 1}`}
                                     >
                                       <button
-                                        onClick={() => setImagePreview(imgData)}
+                                        onClick={() => setImagePreview(imgData.url)}
                                         style={{
                                           width: "100%",
                                           height: "100%",
@@ -2496,7 +2626,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                         }}
                                       >
                                         <img
-                                          src={imgData}
+                                          src={imgData.url}
                                           alt={`Photo ${imgIndex + 1}`}
                                           style={{
                                             width: "100%",
@@ -2586,7 +2716,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                       <button
                         title="Supprimer la ligne"
                         aria-label="Supprimer la ligne"
-                        onClick={() => { removeHistoryImage(row.id); onDelete(row.id); }}
+                        onClick={async () => { await removeHistoryImage(row.id); onDelete(row.id); }}
                         style={{ border: "1px solid rgba(255,79,103,0.25)", background: "rgba(90,20,30,0.35)", color: "#ff97a6", borderRadius: 8, height: 34, width: 38, fontSize: 18, cursor: "pointer" }}
                       >🗑️</button>
                     </td>
@@ -3974,6 +4104,7 @@ export default function App() {
           onDelete={deleteHistoryEntry}
           onClear={() => clearHistoryForShift("jour")}
           onCommentSave={updateHistoryComment}
+          session={session}
           compact={false}
         />
       </div>
@@ -4019,6 +4150,7 @@ export default function App() {
           onDelete={deleteHistoryEntry}
           onClear={() => clearHistoryForShift("soir")}
           onCommentSave={updateHistoryComment}
+          session={session}
           compact={false}
         />
       </div>
