@@ -2558,6 +2558,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                             </>
                           );
                         })()}
+                      </div>
 
                       <div style={{ marginTop: 5, minHeight: 14, color: commentStatus[row.id] === "saved" ? "#9df548" : commentStatus[row.id] === "error" ? "#ff4f67" : "#7f99ad", fontSize: 10, fontWeight: 800 }}>
                         {commentStatus[row.id] === "dirty" ? "Modification non enregistrée" : commentStatus[row.id] === "saving" ? "Sauvegarde..." : commentStatus[row.id] === "saved" ? "✔ Commentaire enregistré" : commentStatus[row.id] === "error" ? "Erreur sauvegarde" : ""}
