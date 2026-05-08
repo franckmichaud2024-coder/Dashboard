@@ -19,6 +19,7 @@ const KPI_ORDER_KEY = "dashboard_kpi_order_v1";
 const HISTORY_KEY = "dashboard_historique_production_v1";
 const HISTORY_IMAGE_KEY = "dashboard_historique_images_v1";
 const DASHBOARD_STATE_TABLE = "dashboard_state";
+const DASHBOARD_IMAGES_BUCKET = "dashboard-images";
 
 const UI_FONT = "Inter, Segoe UI, Roboto, Arial, sans-serif";
 
@@ -81,6 +82,7 @@ function mapHistoryRow(row) {
     efficacite: Number(row.efficacite || 0),
     referenceBloc: row.reference_bloc || "Saisie manuelle",
     commentaire: row.commentaire || "",
+    photos: Array.isArray(row.photos) ? row.photos : [],
     savedAt: row.saved_at,
   };
 }
@@ -254,6 +256,15 @@ function performanceColor(value) {
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function safeStorageFileName(name) {
+  return String(name || "photo.jpg")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(-90) || "photo.jpg";
 }
 
 
@@ -2065,10 +2076,10 @@ function resizeImageToDataUrl(file, maxWidth = 1200, quality = 0.72) {
   });
 }
 
-function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact = false }) {
+function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosUpload, onPhotoDelete, compact = false }) {
   const [commentDrafts, setCommentDrafts] = useState({});
   const [commentStatus, setCommentStatus] = useState({});
-  const [imageDrafts, setImageDrafts] = useState(() => safeLoadHistoryImages());
+  const [imageStatus, setImageStatus] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
@@ -2113,53 +2124,26 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
       return;
     }
 
-    try {
-      const imagesData = await Promise.all(
-        imageFiles.map((file) => resizeImageToDataUrl(file))
-      );
+    setImageStatus((prev) => ({ ...prev, [rowId]: "uploading" }));
 
-      setImageDrafts((prev) => {
-        const existing = Array.isArray(prev[rowId])
-          ? prev[rowId]
-          : prev[rowId]
-          ? [prev[rowId]]
-          : [];
+    const ok = await onPhotosUpload?.(rowId, imageFiles);
 
-        const next = {
-          ...prev,
-          [rowId]: [...existing, ...imagesData],
-        };
+    setImageStatus((prev) => ({ ...prev, [rowId]: ok === false ? "error" : "saved" }));
 
-        localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
+    setTimeout(() => {
+      setImageStatus((prev) => {
+        const next = { ...prev };
+        if (next[rowId] === "saved") delete next[rowId];
         return next;
       });
-    } catch {
-      alert("Impossible d'importer une ou plusieurs images.");
-    }
+    }, 1800);
   }
 
-  function removeHistoryImage(rowId, imageIndex = null) {
-    setImageDrafts((prev) => {
-      const next = { ...prev };
-
-      if (imageIndex === null) {
-        delete next[rowId];
-      } else {
-        const images = Array.isArray(next[rowId])
-          ? next[rowId]
-          : next[rowId]
-          ? [next[rowId]]
-          : [];
-
-        const updated = images.filter((_, index) => index !== imageIndex);
-
-        if (updated.length) next[rowId] = updated;
-        else delete next[rowId];
-      }
-
-      localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+  async function removeHistoryImage(rowId, imageIndex = null) {
+    const ok = await onPhotoDelete?.(rowId, imageIndex);
+    if (ok === false) {
+      setImageStatus((prev) => ({ ...prev, [rowId]: "error" }));
+    }
   }
 
   const maxProduction = Math.max(...data.map((d) => Number(d.production || 0)), 100);
@@ -2370,11 +2354,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                         }}
                       >
                         {(() => {
-                          const rowImages = Array.isArray(imageDrafts[row.id])
-                            ? imageDrafts[row.id]
-                            : imageDrafts[row.id]
-                            ? [imageDrafts[row.id]]
-                            : [];
+                          const rowImages = Array.isArray(row.photos) ? row.photos : [];
 
                           return (
                             <>
@@ -2484,7 +2464,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                       title={`Photo ${imgIndex + 1}`}
                                     >
                                       <button
-                                        onClick={() => setImagePreview(imgData)}
+                                        onClick={() => setImagePreview(imgData.url || imgData)}
                                         style={{
                                           width: "100%",
                                           height: "100%",
@@ -2496,7 +2476,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                         }}
                                       >
                                         <img
-                                          src={imgData}
+                                          src={imgData.url || imgData}
                                           alt={`Photo ${imgIndex + 1}`}
                                           style={{
                                             width: "100%",
@@ -2586,7 +2566,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                       <button
                         title="Supprimer la ligne"
                         aria-label="Supprimer la ligne"
-                        onClick={() => { removeHistoryImage(row.id); onDelete(row.id); }}
+                        onClick={() => { onDelete(row.id); }}
                         style={{ border: "1px solid rgba(255,79,103,0.25)", background: "rgba(90,20,30,0.35)", color: "#ff97a6", borderRadius: 8, height: 34, width: 38, fontSize: 18, cursor: "pointer" }}
                       >🗑️</button>
                     </td>
@@ -3749,6 +3729,117 @@ export default function App() {
     setHistory((prev) => prev.filter((item) => item.id !== id));
   }
 
+  async function uploadHistoryPhotos(id, files) {
+    if (!supabase || !session?.user) {
+      alert("Connexion Supabase requise pour synchroniser les photos.");
+      return false;
+    }
+
+    const row = history.find((item) => item.id === id);
+    if (!row) {
+      alert("Ligne historique introuvable.");
+      return false;
+    }
+
+    try {
+      const uploaded = [];
+
+      for (const [index, file] of Array.from(files || []).entries()) {
+        const extension = safeStorageFileName(file.name).split(".").pop() || "jpg";
+        const filePath = `${session.user.id}/${id}/${Date.now()}_${index}_${typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)}.${extension}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .upload(filePath, file, {
+            contentType: file.type || "image/jpeg",
+            upsert: false,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: signed, error: signedError } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+        if (signedError) throw signedError;
+
+        uploaded.push({
+          path: filePath,
+          url: signed?.signedUrl,
+          name: file.name,
+          uploadedAt: new Date().toISOString(),
+        });
+      }
+
+      const nextPhotos = [...(Array.isArray(row.photos) ? row.photos : []), ...uploaded];
+
+      const { error: updateError } = await supabase
+        .from("production_history")
+        .update({ photos: nextPhotos })
+        .eq("id", id)
+        .eq("user_id", session.user.id);
+
+      if (updateError) throw updateError;
+
+      setHistory((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, photos: nextPhotos } : item))
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Erreur upload photos :", error);
+      alert("Erreur upload photo : " + (error?.message || ""));
+      return false;
+    }
+  }
+
+  async function deleteHistoryPhoto(id, imageIndex = null) {
+    if (!supabase || !session?.user) {
+      alert("Connexion Supabase requise pour supprimer les photos.");
+      return false;
+    }
+
+    const row = history.find((item) => item.id === id);
+    if (!row) return false;
+
+    const photos = Array.isArray(row.photos) ? row.photos : [];
+    const toRemove = imageIndex === null ? photos : photos.filter((_, index) => index === imageIndex);
+    const pathsToRemove = toRemove.map((photo) => photo.path).filter(Boolean);
+
+    try {
+      if (pathsToRemove.length) {
+        const { error: removeError } = await supabase.storage
+          .from(DASHBOARD_IMAGES_BUCKET)
+          .remove(pathsToRemove);
+
+        if (removeError) throw removeError;
+      }
+
+      const nextPhotos =
+        imageIndex === null
+          ? []
+          : photos.filter((_, index) => index !== imageIndex);
+
+      const { error: updateError } = await supabase
+        .from("production_history")
+        .update({ photos: nextPhotos })
+        .eq("id", id)
+        .eq("user_id", session.user.id);
+
+      if (updateError) throw updateError;
+
+      setHistory((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, photos: nextPhotos } : item))
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Erreur suppression photo :", error);
+      alert("Erreur suppression photo : " + (error?.message || ""));
+      return false;
+    }
+  }
+
   async function clearHistoryForShift(targetShift) {
     const label = targetShift === "jour" ? "quart de jour" : "quart de soir";
     const ok = window.confirm(`Souhaites-tu vraiment effacer tout l'historique du ${label} ?`);
@@ -3974,6 +4065,8 @@ export default function App() {
           onDelete={deleteHistoryEntry}
           onClear={() => clearHistoryForShift("jour")}
           onCommentSave={updateHistoryComment}
+          onPhotosUpload={uploadHistoryPhotos}
+          onPhotoDelete={deleteHistoryPhoto}
           compact={false}
         />
       </div>
@@ -4019,6 +4112,8 @@ export default function App() {
           onDelete={deleteHistoryEntry}
           onClear={() => clearHistoryForShift("soir")}
           onCommentSave={updateHistoryComment}
+          onPhotosUpload={uploadHistoryPhotos}
+          onPhotoDelete={deleteHistoryPhoto}
           compact={false}
         />
       </div>
