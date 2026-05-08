@@ -2098,8 +2098,12 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
     }, 1800);
   }
 
-  async function handleImageUpload(rowId, files) {
-    const selectedFiles = Array.from(files || []);
+  async function handleImageUpload(rowId, filesOrFile) {
+    const selectedFiles =
+      filesOrFile instanceof File
+        ? [filesOrFile]
+        : Array.from(filesOrFile || []);
+
     if (!selectedFiles.length) return;
 
     const imageFiles = selectedFiles.filter((file) => file.type?.startsWith("image/"));
@@ -2374,92 +2378,103 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
 
                           return (
                             <>
-                              <label
+                              <div
                                 style={{
-                                  display: "inline-flex",
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 8,
                                   alignItems: "center",
-                                  gap: 6,
-                                  height: 30,
-                                  padding: "0 10px",
-                                  borderRadius: 8,
-                                  border: "1px solid rgba(57,232,255,0.30)",
-                                  background: "rgba(12,72,98,0.36)",
-                                  color: "#39e8ff",
-                                  fontSize: 11,
-                                  fontWeight: 900,
-                                  cursor: "pointer",
+                                  marginTop: 8,
                                 }}
                               >
-                                📎 Importer photos
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  multiple
-                                  onChange={(e) => {
-                                    handleImageUpload(row.id, e.target.files);
-                                    e.target.value = "";
+                                <label
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    height: 30,
+                                    padding: "0 10px",
+                                    borderRadius: 8,
+                                    border: "1px solid rgba(57,232,255,0.30)",
+                                    background: "rgba(12,72,98,0.36)",
+                                    color: "#39e8ff",
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    cursor: "pointer",
                                   }}
-                                  style={{ display: "none" }}
-                                />
-                              </label>
-
-                              {rowImages.length > 0 && (
-                                <>
-                                  <div
-                                    style={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      height: 30,
-                                      padding: "0 9px",
-                                      borderRadius: 8,
-                                      border: "1px solid rgba(255,216,77,0.24)",
-                                      background: "rgba(74,56,12,0.30)",
-                                      color: "#ffd84d",
-                                      fontSize: 11,
-                                      fontWeight: 900,
+                                >
+                                  📎 Ajouter photo(s)
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple={true}
+                                    onChange={(e) => {
+                                      handleImageUpload(row.id, e.currentTarget.files);
+                                      e.currentTarget.value = "";
                                     }}
-                                  >
-                                    🖼️ {rowImages.length}
-                                  </div>
+                                    style={{ display: "none" }}
+                                  />
+                                </label>
 
-                                  <button
-                                    onClick={() => removeHistoryImage(row.id)}
-                                    style={{
-                                      height: 30,
-                                      padding: "0 10px",
-                                      borderRadius: 8,
-                                      border: "1px solid rgba(255,79,103,0.25)",
-                                      background: "rgba(90,20,30,0.35)",
-                                      color: "#ff97a6",
-                                      fontSize: 11,
-                                      fontWeight: 900,
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    Retirer tout
-                                  </button>
-                                </>
-                              )}
+                                {rowImages.length > 0 && (
+                                  <>
+                                    <div
+                                      style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        height: 30,
+                                        padding: "0 9px",
+                                        borderRadius: 8,
+                                        border: "1px solid rgba(255,216,77,0.24)",
+                                        background: "rgba(74,56,12,0.30)",
+                                        color: "#ffd84d",
+                                        fontSize: 11,
+                                        fontWeight: 900,
+                                      }}
+                                    >
+                                      🖼️ {rowImages.length} photo{rowImages.length > 1 ? "s" : ""}
+                                    </div>
+
+                                    <button
+                                      onClick={() => removeHistoryImage(row.id)}
+                                      style={{
+                                        height: 30,
+                                        padding: "0 10px",
+                                        borderRadius: 8,
+                                        border: "1px solid rgba(255,79,103,0.25)",
+                                        background: "rgba(90,20,30,0.35)",
+                                        color: "#ff97a6",
+                                        fontSize: 11,
+                                        fontWeight: 900,
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      Retirer tout
+                                    </button>
+                                  </>
+                                )}
+                              </div>
 
                               {rowImages.length > 0 && (
                                 <div
                                   style={{
                                     marginTop: 10,
-                                    display: "flex",
-                                    flexWrap: "wrap",
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(54px, 54px))",
                                     gap: 8,
                                     alignItems: "center",
+                                    maxWidth: 380,
                                   }}
                                 >
                                   {rowImages.map((imgData, imgIndex) => (
                                     <div
                                       key={`${row.id}-photo-${imgIndex}`}
                                       style={{
-                                        width: 58,
-                                        height: 58,
+                                        width: 54,
+                                        height: 54,
                                         position: "relative",
-                                        borderRadius: 10,
+                                        borderRadius: 8,
                                         border: "1px solid rgba(57,232,255,0.34)",
                                         background:
                                           "linear-gradient(180deg, rgba(7,28,49,0.94), rgba(2,12,24,0.98))",
@@ -2488,44 +2503,27 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                             height: "100%",
                                             objectFit: "cover",
                                             display: "block",
-                                            opacity: 0.86,
                                           }}
                                         />
-
-                                        <div
-                                          style={{
-                                            position: "absolute",
-                                            inset: 0,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            background: "rgba(0,0,0,0.18)",
-                                            color: "#ffffff",
-                                            fontSize: 20,
-                                            textShadow: "0 0 8px rgba(0,0,0,0.85)",
-                                            pointerEvents: "none",
-                                          }}
-                                        >
-                                          🖼️
-                                        </div>
                                       </button>
 
                                       <div
                                         style={{
                                           position: "absolute",
-                                          left: 4,
-                                          top: 4,
-                                          minWidth: 18,
-                                          height: 18,
+                                          left: 3,
+                                          top: 3,
+                                          minWidth: 17,
+                                          height: 17,
                                           borderRadius: 999,
-                                          background: "rgba(0,0,0,0.62)",
+                                          background: "rgba(0,0,0,0.72)",
                                           color: "#ffd84d",
                                           fontSize: 10,
                                           fontWeight: 900,
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          padding: "0 5px",
+                                          padding: "0 4px",
+                                          pointerEvents: "none",
                                         }}
                                       >
                                         {imgIndex + 1}
@@ -2538,15 +2536,15 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                                           position: "absolute",
                                           right: 3,
                                           top: 3,
-                                          width: 18,
-                                          height: 18,
+                                          width: 17,
+                                          height: 17,
                                           borderRadius: 999,
                                           border: "1px solid rgba(255,255,255,0.18)",
-                                          background: "rgba(90,20,30,0.88)",
+                                          background: "rgba(90,20,30,0.90)",
                                           color: "#fff",
                                           fontSize: 11,
                                           fontWeight: 900,
-                                          lineHeight: "16px",
+                                          lineHeight: "15px",
                                           cursor: "pointer",
                                           padding: 0,
                                         }}
