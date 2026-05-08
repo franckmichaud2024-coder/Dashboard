@@ -3021,6 +3021,46 @@ export default function App() {
     loadHistoryFromSupabase();
   }, [session?.user?.id]);
 
+  useEffect(() => {
+    if (!supabase || !session?.user || !dashboardCloudLoaded) return undefined;
+
+    const channel = supabase
+      .channel("dashboard_state_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: DASHBOARD_STATE_TABLE,
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        (payload) => {
+          const cloudState = payload.new?.state;
+
+          if (
+            cloudState &&
+            (cloudState.shift === "jour" || cloudState.shift === "soir") &&
+            cloudState.data?.jour &&
+            cloudState.data?.soir
+          ) {
+            setShift(cloudState.shift);
+            setStateByShift(cloudState.data);
+
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudState));
+            } catch {
+              // no-op
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id, dashboardCloudLoaded]);
+
   async function handleLogout() {
     if (!supabase) return;
     await supabase.auth.signOut();

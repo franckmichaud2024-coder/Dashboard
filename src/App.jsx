@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import {
   ResponsiveContainer,
@@ -2019,7 +2019,16 @@ function openHistoryGraphWindow(title, data) {
 
 function safeLoadHistoryImages() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+    const raw = JSON.parse(localStorage.getItem(HISTORY_IMAGE_KEY) || "{}");
+
+    // Ancien format : { rowId: "data:image/..." }
+    // Nouveau format : { rowId: ["data:image/...", "data:image/..."] }
+    return Object.fromEntries(
+      Object.entries(raw || {}).map(([rowId, value]) => [
+        rowId,
+        Array.isArray(value) ? value : value ? [value] : [],
+      ])
+    );
   } catch {
     return {};
   }
@@ -2089,30 +2098,61 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
     }, 1800);
   }
 
-  async function handleImageUpload(rowId, file) {
-    if (!file) return;
+  async function handleImageUpload(rowId, files) {
+    const selectedFiles = Array.from(files || []);
+    if (!selectedFiles.length) return;
 
-    if (!file.type?.startsWith("image/")) {
-      alert("Choisis un fichier image seulement.");
+    const imageFiles = selectedFiles.filter((file) => file.type?.startsWith("image/"));
+
+    if (!imageFiles.length) {
+      alert("Choisis un ou plusieurs fichiers image seulement.");
       return;
     }
 
     try {
-      const imageData = await resizeImageToDataUrl(file);
+      const imagesData = await Promise.all(
+        imageFiles.map((file) => resizeImageToDataUrl(file))
+      );
+
       setImageDrafts((prev) => {
-        const next = { ...prev, [rowId]: imageData };
+        const existing = Array.isArray(prev[rowId])
+          ? prev[rowId]
+          : prev[rowId]
+          ? [prev[rowId]]
+          : [];
+
+        const next = {
+          ...prev,
+          [rowId]: [...existing, ...imagesData],
+        };
+
         localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
         return next;
       });
     } catch {
-      alert("Impossible d'importer cette image.");
+      alert("Impossible d'importer une ou plusieurs images.");
     }
   }
 
-  function removeHistoryImage(rowId) {
+  function removeHistoryImage(rowId, imageIndex = null) {
     setImageDrafts((prev) => {
       const next = { ...prev };
-      delete next[rowId];
+
+      if (imageIndex === null) {
+        delete next[rowId];
+      } else {
+        const images = Array.isArray(next[rowId])
+          ? next[rowId]
+          : next[rowId]
+          ? [next[rowId]]
+          : [];
+
+        const updated = images.filter((_, index) => index !== imageIndex);
+
+        if (updated.length) next[rowId] = updated;
+        else delete next[rowId];
+      }
+
       localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify(next));
       return next;
     });
@@ -2325,97 +2365,201 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, compact =
                           marginTop: 8,
                         }}
                       >
-                        <label
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            height: 30,
-                            padding: "0 10px",
-                            borderRadius: 8,
-                            border: "1px solid rgba(57,232,255,0.30)",
-                            background: "rgba(12,72,98,0.36)",
-                            color: "#39e8ff",
-                            fontSize: 11,
-                            fontWeight: 900,
-                            cursor: "pointer",
-                          }}
-                        >
-                          📎 Importer image
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(row.id, e.target.files?.[0])}
-                            style={{ display: "none" }}
-                          />
-                        </label>
+                        {(() => {
+                          const rowImages = Array.isArray(imageDrafts[row.id])
+                            ? imageDrafts[row.id]
+                            : imageDrafts[row.id]
+                            ? [imageDrafts[row.id]]
+                            : [];
 
-                        {imageDrafts[row.id] && (
-                          <>
-                            <button
-                              onClick={() => removeHistoryImage(row.id)}
-                              style={{
-                                height: 30,
-                                padding: "0 10px",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,79,103,0.25)",
-                                background: "rgba(90,20,30,0.35)",
-                                color: "#ff97a6",
-                                fontSize: 11,
-                                fontWeight: 900,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Retirer image
-                            </button>
+                          return (
+                            <>
+                              <label
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  height: 30,
+                                  padding: "0 10px",
+                                  borderRadius: 8,
+                                  border: "1px solid rgba(57,232,255,0.30)",
+                                  background: "rgba(12,72,98,0.36)",
+                                  color: "#39e8ff",
+                                  fontSize: 11,
+                                  fontWeight: 900,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                📎 Importer photos
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={(e) => {
+                                    handleImageUpload(row.id, e.target.files);
+                                    e.target.value = "";
+                                  }}
+                                  style={{ display: "none" }}
+                                />
+                              </label>
 
-                            <button
-                              onClick={() => setImagePreview(imageDrafts[row.id])}
-                              style={{
-                                height: 30,
-                                padding: "0 10px",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,216,77,0.25)",
-                                background: "rgba(90,68,14,0.35)",
-                                color: "#ffd84d",
-                                fontSize: 11,
-                                fontWeight: 900,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Ouvrir image
-                            </button>
-                          </>
-                        )}
-                      </div>
+                              {rowImages.length > 0 && (
+                                <>
+                                  <div
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      height: 30,
+                                      padding: "0 9px",
+                                      borderRadius: 8,
+                                      border: "1px solid rgba(255,216,77,0.24)",
+                                      background: "rgba(74,56,12,0.30)",
+                                      color: "#ffd84d",
+                                      fontSize: 11,
+                                      fontWeight: 900,
+                                    }}
+                                  >
+                                    🖼️ {rowImages.length}
+                                  </div>
 
-                      {imageDrafts[row.id] && (
-                        <div
-                          onClick={() => setImagePreview(imageDrafts[row.id])}
-                          title="Cliquer pour agrandir"
-                          style={{
-                            marginTop: 8,
-                            width: 120,
-                            height: 74,
-                            borderRadius: 10,
-                            overflow: "hidden",
-                            border: "1px solid rgba(120,190,255,0.18)",
-                            background: "rgba(6,18,34,0.82)",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <img
-                            src={imageDrafts[row.id]}
-                            alt="Pièce jointe"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      )}
+                                  <button
+                                    onClick={() => removeHistoryImage(row.id)}
+                                    style={{
+                                      height: 30,
+                                      padding: "0 10px",
+                                      borderRadius: 8,
+                                      border: "1px solid rgba(255,79,103,0.25)",
+                                      background: "rgba(90,20,30,0.35)",
+                                      color: "#ff97a6",
+                                      fontSize: 11,
+                                      fontWeight: 900,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    Retirer tout
+                                  </button>
+                                </>
+                              )}
+
+                              {rowImages.length > 0 && (
+                                <div
+                                  style={{
+                                    marginTop: 10,
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: 8,
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  {rowImages.map((imgData, imgIndex) => (
+                                    <div
+                                      key={`${row.id}-photo-${imgIndex}`}
+                                      style={{
+                                        width: 58,
+                                        height: 58,
+                                        position: "relative",
+                                        borderRadius: 10,
+                                        border: "1px solid rgba(57,232,255,0.34)",
+                                        background:
+                                          "linear-gradient(180deg, rgba(7,28,49,0.94), rgba(2,12,24,0.98))",
+                                        boxShadow: "0 0 16px rgba(57,232,255,0.10)",
+                                        overflow: "hidden",
+                                      }}
+                                      title={`Photo ${imgIndex + 1}`}
+                                    >
+                                      <button
+                                        onClick={() => setImagePreview(imgData)}
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          border: "none",
+                                          padding: 0,
+                                          margin: 0,
+                                          cursor: "pointer",
+                                          background: "transparent",
+                                        }}
+                                      >
+                                        <img
+                                          src={imgData}
+                                          alt={`Photo ${imgIndex + 1}`}
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block",
+                                            opacity: 0.86,
+                                          }}
+                                        />
+
+                                        <div
+                                          style={{
+                                            position: "absolute",
+                                            inset: 0,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            background: "rgba(0,0,0,0.18)",
+                                            color: "#ffffff",
+                                            fontSize: 20,
+                                            textShadow: "0 0 8px rgba(0,0,0,0.85)",
+                                            pointerEvents: "none",
+                                          }}
+                                        >
+                                          🖼️
+                                        </div>
+                                      </button>
+
+                                      <div
+                                        style={{
+                                          position: "absolute",
+                                          left: 4,
+                                          top: 4,
+                                          minWidth: 18,
+                                          height: 18,
+                                          borderRadius: 999,
+                                          background: "rgba(0,0,0,0.62)",
+                                          color: "#ffd84d",
+                                          fontSize: 10,
+                                          fontWeight: 900,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          padding: "0 5px",
+                                        }}
+                                      >
+                                        {imgIndex + 1}
+                                      </div>
+
+                                      <button
+                                        onClick={() => removeHistoryImage(row.id, imgIndex)}
+                                        title="Retirer cette photo"
+                                        style={{
+                                          position: "absolute",
+                                          right: 3,
+                                          top: 3,
+                                          width: 18,
+                                          height: 18,
+                                          borderRadius: 999,
+                                          border: "1px solid rgba(255,255,255,0.18)",
+                                          background: "rgba(90,20,30,0.88)",
+                                          color: "#fff",
+                                          fontSize: 11,
+                                          fontWeight: 900,
+                                          lineHeight: "16px",
+                                          cursor: "pointer",
+                                          padding: 0,
+                                        }}
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
 
                       <div style={{ marginTop: 5, minHeight: 14, color: commentStatus[row.id] === "saved" ? "#9df548" : commentStatus[row.id] === "error" ? "#ff4f67" : "#7f99ad", fontSize: 10, fontWeight: 800 }}>
                         {commentStatus[row.id] === "dirty" ? "Modification non enregistrée" : commentStatus[row.id] === "saving" ? "Sauvegarde..." : commentStatus[row.id] === "saved" ? "✔ Commentaire enregistré" : commentStatus[row.id] === "error" ? "Erreur sauvegarde" : ""}
@@ -2763,9 +2907,6 @@ export default function App() {
   const [manualComment, setManualComment] = useState("");
   const [draggedKpi, setDraggedKpi] = useState(null);
   const [dashboardCloudLoaded, setDashboardCloudLoaded] = useState(false);
-  const sessionRef = useRef(null);
-  const saveDashboardTimerRef = useRef(null);
-  const dashboardCloudLoadedRef = useRef(false);
   const { isMobile, isTablet } = useResponsive();
 
   const inputStyle = normalInputStyle(isMobile);
@@ -2787,22 +2928,6 @@ export default function App() {
     const onPopState = () => setRoute(window.location.pathname);
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
-
-  useEffect(() => {
-    sessionRef.current = session;
-  }, [session]);
-
-  useEffect(() => {
-    dashboardCloudLoadedRef.current = dashboardCloudLoaded;
-  }, [dashboardCloudLoaded]);
-
-  useEffect(() => {
-    return () => {
-      if (saveDashboardTimerRef.current) {
-        clearTimeout(saveDashboardTimerRef.current);
-      }
-    };
   }, []);
 
   useEffect(() => {
@@ -2894,7 +3019,27 @@ export default function App() {
     } catch {
       // no-op
     }
-  }, [shift, stateByShift]);
+
+    if (!supabase || !session?.user || !dashboardCloudLoaded) return undefined;
+
+    const timer = setTimeout(async () => {
+      const payload = {
+        user_id: session.user.id,
+        state: { shift, data: stateByShift },
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from(DASHBOARD_STATE_TABLE)
+        .upsert(payload, { onConflict: "user_id" });
+
+      if (error) {
+        console.error("Erreur sauvegarde état dashboard Supabase :", error.message);
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [shift, stateByShift, session?.user?.id, dashboardCloudLoaded]);
 
   useEffect(() => {
     try {
@@ -2923,7 +3068,6 @@ export default function App() {
   async function loadDashboardStateFromSupabase() {
     if (!supabase || !session?.user) {
       setDashboardCloudLoaded(true);
-      dashboardCloudLoadedRef.current = true;
       return;
     }
 
@@ -2936,7 +3080,6 @@ export default function App() {
     if (error) {
       console.error("Erreur lecture état dashboard Supabase :", error.message);
       setDashboardCloudLoaded(true);
-      dashboardCloudLoadedRef.current = true;
       return;
     }
 
@@ -2959,43 +3102,6 @@ export default function App() {
     }
 
     setDashboardCloudLoaded(true);
-    dashboardCloudLoadedRef.current = true;
-  }
-
-  async function saveDashboardStateToSupabase(nextShift, nextData, delay = 350) {
-    const activeSession = sessionRef.current;
-
-    if (!supabase || !activeSession?.user || !dashboardCloudLoadedRef.current) {
-      return;
-    }
-
-    if (saveDashboardTimerRef.current) {
-      clearTimeout(saveDashboardTimerRef.current);
-    }
-
-    saveDashboardTimerRef.current = setTimeout(async () => {
-      const payload = {
-        user_id: activeSession.user.id,
-        state: { shift: nextShift, data: nextData },
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from(DASHBOARD_STATE_TABLE)
-        .upsert(payload, { onConflict: "user_id" });
-
-      if (error) {
-        console.error("Erreur sauvegarde dashboard_state Supabase :", error.message);
-        window.__dashboardSyncLastError = error.message;
-      } else {
-        window.__dashboardSyncLastSave = payload.updated_at;
-      }
-    }, delay);
-  }
-
-  function changeShift(nextShift) {
-    setShift(nextShift);
-    saveDashboardStateToSupabase(nextShift, stateByShift, 0);
   }
 
   async function loadHistoryFromSupabase() {
@@ -3020,46 +3126,6 @@ export default function App() {
     loadDashboardStateFromSupabase();
     loadHistoryFromSupabase();
   }, [session?.user?.id]);
-
-  useEffect(() => {
-    if (!supabase || !session?.user || !dashboardCloudLoaded) return undefined;
-
-    const channel = supabase
-      .channel("dashboard_state_realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: DASHBOARD_STATE_TABLE,
-          filter: `user_id=eq.${session.user.id}`,
-        },
-        (payload) => {
-          const cloudState = payload.new?.state;
-
-          if (
-            cloudState &&
-            (cloudState.shift === "jour" || cloudState.shift === "soir") &&
-            cloudState.data?.jour &&
-            cloudState.data?.soir
-          ) {
-            setShift(cloudState.shift);
-            setStateByShift(cloudState.data);
-
-            try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudState));
-            } catch {
-              // no-op
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session?.user?.id, dashboardCloudLoaded]);
 
   async function handleLogout() {
     if (!supabase) return;
@@ -3139,15 +3205,10 @@ export default function App() {
   }
 
   function updateShiftData(patch) {
-    setStateByShift((prev) => {
-      const nextData = {
-        ...prev,
-        [shift]: { ...prev[shift], ...patch },
-      };
-
-      saveDashboardStateToSupabase(shift, nextData);
-      return nextData;
-    });
+    setStateByShift((prev) => ({
+      ...prev,
+      [shift]: { ...prev[shift], ...patch },
+    }));
   }
 
   function toggleClockPause() {
@@ -4181,10 +4242,10 @@ export default function App() {
                     alignItems: "center",
                   }}
                 >
-                  <Btn active={shift === "jour"} onClick={() => changeShift("jour")} compact={mobileCompact}>
+                  <Btn active={shift === "jour"} onClick={() => setShift("jour")} compact={mobileCompact}>
                     Quart de jour
                   </Btn>
-                  <Btn active={shift === "soir"} onClick={() => changeShift("soir")} compact={mobileCompact}>
+                  <Btn active={shift === "soir"} onClick={() => setShift("soir")} compact={mobileCompact}>
                     Quart de soir
                   </Btn>
 <button
