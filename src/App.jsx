@@ -2874,9 +2874,196 @@ function LoginScreen() {
 }
 
 
+
+function ChangePasswordModal({ onClose }) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    setMessage("");
+
+    if (!supabase) {
+      setMessage("Supabase n'est pas configuré.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setMessage("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage("Les deux mots de passe ne sont pas identiques.");
+      return;
+    }
+
+    setSaving(true);
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      setMessage("Erreur : " + error.message);
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    setMessage("Mot de passe modifié avec succès.");
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 999999,
+        background: "rgba(0,0,0,0.72)",
+        display: "grid",
+        placeItems: "center",
+        padding: 20,
+        fontFamily: UI_FONT,
+      }}
+    >
+      <form
+        onSubmit={handleChangePassword}
+        style={{
+          width: "min(440px, 100%)",
+          borderRadius: 20,
+          border: "1px solid rgba(74,190,255,0.28)",
+          background:
+            "linear-gradient(180deg, rgba(5,16,31,0.98), rgba(3,11,22,0.98))",
+          boxShadow: "0 24px 70px rgba(0,0,0,0.65)",
+          padding: 22,
+          color: "#eefaff",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: 950,
+            color: "#39e8ff",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
+          Changer le mot de passe
+        </div>
+
+        <div style={{ color: "#7f99ad", fontSize: 12, fontWeight: 800, marginBottom: 18 }}>
+          L'utilisateur peut remplacer le mot de passe temporaire fourni par l'administrateur.
+        </div>
+
+        <label style={{ display: "grid", gap: 6, marginBottom: 12, fontWeight: 850 }}>
+          Nouveau mot de passe
+          <input
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
+            required
+            style={{
+              height: 42,
+              borderRadius: 12,
+              border: "1px solid rgba(74,190,255,0.18)",
+              background: "rgba(6,18,34,0.88)",
+              color: "#eefaff",
+              padding: "0 12px",
+              fontWeight: 800,
+              outline: "none",
+            }}
+          />
+        </label>
+
+        <label style={{ display: "grid", gap: 6, marginBottom: 12, fontWeight: 850 }}>
+          Confirmer le mot de passe
+          <input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
+            required
+            style={{
+              height: 42,
+              borderRadius: 12,
+              border: "1px solid rgba(74,190,255,0.18)",
+              background: "rgba(6,18,34,0.88)",
+              color: "#eefaff",
+              padding: "0 12px",
+              fontWeight: 800,
+              outline: "none",
+            }}
+          />
+        </label>
+
+        {message ? (
+          <div
+            style={{
+              minHeight: 28,
+              marginBottom: 12,
+              color: message.includes("succès") ? "#9df548" : "#ff97a6",
+              fontSize: 12,
+              fontWeight: 900,
+            }}
+          >
+            {message}
+          </div>
+        ) : null}
+
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              height: 38,
+              padding: "0 14px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(20,34,55,0.78)",
+              color: "#eefaff",
+              fontSize: 12,
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            Fermer
+          </button>
+
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              height: 38,
+              padding: "0 16px",
+              borderRadius: 10,
+              border: "1px solid rgba(57,232,255,0.38)",
+              background:
+                "linear-gradient(180deg, rgba(34,93,128,0.95), rgba(10,42,67,0.95))",
+              color: "#fff",
+              fontSize: 12,
+              fontWeight: 950,
+              cursor: saving ? "not-allowed" : "pointer",
+            }}
+          >
+            {saving ? "Modification..." : "Enregistrer"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const boot = useMemo(() => safeLoad(), []);
   const [shift, setShift] = useState(boot.shift);
   const [stateByShift, setStateByShift] = useState(boot.data);
@@ -4173,6 +4360,10 @@ export default function App() {
 
   return (
     <>
+      {showPasswordModal ? (
+        <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+      ) : null}
+
       <style>
         {`
           * {
@@ -4278,6 +4469,24 @@ export default function App() {
         >
           {session?.user?.email}
         </span>
+        <button
+          type="button"
+          onClick={() => setShowPasswordModal(true)}
+          style={{
+            height: 30,
+            padding: "0 12px",
+            borderRadius: 9,
+            border: "1px solid rgba(57,232,255,0.35)",
+            background: "linear-gradient(180deg, rgba(12,72,98,0.82), rgba(5,25,45,0.92))",
+            color: "#39e8ff",
+            fontSize: 11,
+            fontWeight: 900,
+            cursor: "pointer",
+            fontFamily: UI_FONT,
+          }}
+        >
+          Changer mot de passe
+        </button>
         <button
           type="button"
           onClick={handleLogout}

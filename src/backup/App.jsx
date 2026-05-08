@@ -159,18 +159,38 @@ function clonePreset(data) {
   return JSON.parse(JSON.stringify(data));
 }
 
+function makeEmptyDashboardData() {
+  const data = {
+    jour: clonePreset(PRESETS.jour),
+    soir: clonePreset(PRESETS.soir),
+  };
+
+  for (const shiftKey of ["jour", "soir"]) {
+    data[shiftKey].objectifReel = 0;
+    data[shiftKey].productionReelle = 0;
+
+    data[shiftKey].blocs = data[shiftKey].blocs.map((bloc) => ({
+      ...bloc,
+      coupeReelle: 0,
+    }));
+  }
+
+  return data;
+}
+
+function makeEmptyDashboardState() {
+  return {
+    shift: "soir",
+    data: makeEmptyDashboardData(),
+  };
+}
+
 function safeLoad() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
 
     if (!raw) {
-      return {
-        shift: "soir",
-        data: {
-          jour: clonePreset(PRESETS.jour),
-          soir: clonePreset(PRESETS.soir),
-        },
-      };
+      return makeEmptyDashboardState();
     }
 
     const parsed = JSON.parse(raw);
@@ -186,13 +206,7 @@ function safeLoad() {
 
     return parsed;
   } catch {
-    return {
-      shift: "soir",
-      data: {
-        jour: clonePreset(PRESETS.jour),
-        soir: clonePreset(PRESETS.soir),
-      },
-    };
+    return makeEmptyDashboardState();
   }
 }
 
@@ -3045,6 +3059,9 @@ export default function App() {
 
   async function loadDashboardStateFromSupabase() {
     if (!supabase || !session?.user) {
+      const emptyState = makeEmptyDashboardState();
+      setShift(emptyState.shift);
+      setStateByShift(emptyState.data);
       setDashboardCloudLoaded(true);
       dashboardCloudLoadedRef.current = true;
       return;
@@ -3079,6 +3096,36 @@ export default function App() {
       } catch {
         // no-op
       }
+
+      setDashboardCloudLoaded(true);
+      dashboardCloudLoadedRef.current = true;
+      return;
+    }
+
+    // Nouvel utilisateur : on crée automatiquement un dashboard vide.
+    const emptyState = makeEmptyDashboardState();
+
+    const { error: insertError } = await supabase
+      .from(DASHBOARD_STATE_TABLE)
+      .insert({
+        user_id: session.user.id,
+        state: emptyState,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error("Erreur création état dashboard vide :", insertError.message);
+    }
+
+    setShift(emptyState.shift);
+    setStateByShift(emptyState.data);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(emptyState));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify([]));
+      localStorage.setItem(HISTORY_IMAGE_KEY, JSON.stringify({}));
+    } catch {
+      // no-op
     }
 
     setDashboardCloudLoaded(true);
