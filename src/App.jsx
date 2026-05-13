@@ -3690,7 +3690,7 @@ export default function App() {
   }
 
   function zoomOut() {
-    setZoom((z) => Math.max(0.8, Number((z - 0.05).toFixed(2))));
+    setZoom((z) => Math.max(0.2, Number((z - 0.05).toFixed(2))));
   }
 
   function zoomIn() {
@@ -5141,7 +5141,7 @@ export default function App() {
 
                 <input
                   type="range"
-                  min="80"
+                  min="20"
                   max="120"
                   step="5"
                   value={Math.round(zoom * 100)}
