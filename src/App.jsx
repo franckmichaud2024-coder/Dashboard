@@ -96,6 +96,7 @@ const DEFAULT_VISIBLE_KPIS = {
   theoriqueDepuisDebut: true,
   efficaciteDepuisDebut: true,
   efficaciteTheoriqueReel: true,
+  efficaciteQuartComplet: true,
   heureFinEstimee: true,
   efficaciteGlobale: true,
   restantProduire: true,
@@ -105,6 +106,7 @@ const KPI_OPTIONS = [
   ["alerteDerive", "Alerte dérive production"],
   ["efficaciteDepuisDebut", "Efficacité depuis début du quart"],
   ["efficaciteTheoriqueReel", "Efficacité théorique / réel"],
+  ["efficaciteQuartComplet", "Efficacité quart complet / 100 %"],
   ["efficaciteGlobale", "Efficacité globale pondérée"],
   ["heureFinEstimee", "Heure fin estimée"],
   ["objectifTotal", "Objectif total théorique"],
@@ -699,6 +701,19 @@ function Btn({ children, active, onClick, compact = false }) {
           />
         );
 
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1068,6 +1083,19 @@ function Gauge({ value, target = 92, compact = false }) {
           />
         );
 
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1359,6 +1387,19 @@ function ChartTooltip({ active, payload, label }) {
           />
         );
 
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1555,6 +1596,19 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
           />
         );
 
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -1714,6 +1768,19 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             subtitle="réel produit ÷ théorique depuis début"
             valueColor={efficaciteTheoriqueReelColor}
             highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
             {...common}
           />
         );
@@ -3753,6 +3820,20 @@ export default function App() {
     [blocsAffiches]
   );
 
+  const capaciteQuartComplet = round((totalWorkMinutes(current.periodes) * 585) / 60);
+
+  const efficaciteQuartComplet =
+    capaciteQuartComplet > 0
+      ? (Number(current.productionReelle || 0) / capaciteQuartComplet) * 100
+      : 0;
+
+  const efficaciteQuartCompletColor =
+    efficaciteQuartComplet >= 100
+      ? "#9df548"
+      : efficaciteQuartComplet >= 95
+      ? "#ffd84d"
+      : "#ff4f67";
+
   const projectionFinQuart = Number(
     blocsAffiches[blocsAffiches.length - 1]?.cumulActuel || 0
   );
@@ -4171,6 +4252,19 @@ export default function App() {
             subtitle="réel produit ÷ théorique depuis début"
             valueColor={efficaciteTheoriqueReelColor}
             highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
             {...common}
           />
         );
@@ -5212,6 +5306,19 @@ export default function App() {
           />
         );
 
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
+            {...common}
+          />
+        );
+
       case "heureFinEstimee":
         return (
           <KPI
@@ -5704,6 +5811,19 @@ export default function App() {
             subtitle="réel produit ÷ théorique depuis début"
             valueColor={efficaciteTheoriqueReelColor}
             highlight={efficaciteTheoriqueReel < 95}
+            {...common}
+          />
+        );
+
+      case "efficaciteQuartComplet":
+        return (
+          <KPI
+            key={key}
+            title="Efficacité quart complet / 100 %"
+            value={`${formatPercent(efficaciteQuartComplet)} %`}
+            subtitle={`${capaciteQuartComplet} cochons = 100 % du quart`}
+            valueColor={efficaciteQuartCompletColor}
+            highlight={efficaciteQuartComplet < 95}
             {...common}
           />
         );
