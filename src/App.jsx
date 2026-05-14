@@ -115,6 +115,7 @@ const DEFAULT_VISIBLE_KPIS = {
   efficaciteTheoriqueReel: true,
   efficaciteQuartComplet: true,
   heureFinEstimee: true,
+  heureReelleSelonRestant: true,
   efficaciteGlobale: true,
   restantProduire: true,
 };
@@ -126,6 +127,7 @@ const KPI_OPTIONS = [
   ["efficaciteQuartComplet", "Efficacité quart complet / 100 %"],
   ["efficaciteGlobale", "Efficacité globale pondérée"],
   ["heureFinEstimee", "Heure fin estimée"],
+  ["heureReelleSelonRestant", "Heure réelle selon restant"],
   ["objectifTotal", "Objectif total théorique"],
   ["productionActuelle", "Production actuelle"],
   ["projectionFinQuart", "Projection fin de quart"],
@@ -545,6 +547,26 @@ function estimateFinishTime(periodes, nowMinutes, restant, efficacitePonderee) {
   return minutesToHHMM(lastProductive.end + minutesAfterQuart);
 }
 
+function estimateRealFinishTimeByRemaining(periodes, nowMinutes, restant) {
+  const remaining = Math.max(0, Number(restant || 0));
+
+  if (remaining <= 0) return minutesToHHMM(nowMinutes);
+
+  const productive = periodes
+    .filter((p) => Number(p.cadence || 0) > 0)
+    .map((p) => ({ cadence: Number(p.cadence || 0) }))
+    .filter((p) => p.cadence > 0);
+
+  const lastProductive = productive[productive.length - 1];
+  if (!lastProductive) return "--:--";
+
+  const cochonsParMinute = lastProductive.cadence / 60;
+  if (cochonsParMinute <= 0) return "--:--";
+
+  const minutesNeeded = remaining / cochonsParMinute;
+  return minutesToHHMM(nowMinutes + minutesNeeded);
+}
+
 const shellStyle = {
   maxWidth: 1600,
   minWidth: 1240,
@@ -738,6 +760,17 @@ function Btn({ children, active, onClick, compact = false }) {
             title="Heure fin estimée"
             value={fmtTime(heureFinEstimee)}
             subtitle="pour atteindre l'objectif réel"
+            {...common}
+          />
+        );
+
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
             {...common}
           />
         );
@@ -1124,6 +1157,17 @@ function Gauge({ value, target = 92, compact = false }) {
           />
         );
 
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
+            {...common}
+          />
+        );
+
       case "efficaciteGlobale":
         return (
           <KPI
@@ -1428,6 +1472,17 @@ function ChartTooltip({ active, payload, label }) {
           />
         );
 
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
+            {...common}
+          />
+        );
+
       case "efficaciteGlobale":
         return (
           <KPI
@@ -1637,6 +1692,17 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
           />
         );
 
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
+            {...common}
+          />
+        );
+
       case "efficaciteGlobale":
         return (
           <KPI
@@ -1809,6 +1875,17 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             title="Heure fin estimée"
             value={fmtTime(heureFinEstimee)}
             subtitle="pour atteindre l'objectif réel"
+            {...common}
+          />
+        );
+
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
             {...common}
           />
         );
@@ -3910,6 +3987,12 @@ export default function App() {
     efficacitePonderee
   );
 
+  const heureReelleSelonRestant = estimateRealFinishTimeByRemaining(
+    current.periodes,
+    nowMinutes,
+    restantAProduire
+  );
+
   const theoriqueDepuisDebutQuart = round(
     theoreticalUntilNow(current.periodes, nowMinutes)
   );
@@ -4308,6 +4391,17 @@ export default function App() {
             title="Heure fin estimée"
             value={fmtTime(heureFinEstimee)}
             subtitle="pour atteindre l'objectif réel"
+            {...common}
+          />
+        );
+
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
             {...common}
           />
         );
@@ -5362,6 +5456,17 @@ export default function App() {
           />
         );
 
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
+            {...common}
+          />
+        );
+
       case "efficaciteGlobale":
         return (
           <KPI
@@ -5867,6 +5972,17 @@ export default function App() {
             title="Heure fin estimée"
             value={fmtTime(heureFinEstimee)}
             subtitle="pour atteindre l'objectif réel"
+            {...common}
+          />
+        );
+
+      case "heureReelleSelonRestant":
+        return (
+          <KPI
+            key={key}
+            title="Heure réelle selon restant"
+            value={fmtTime(heureReelleSelonRestant)}
+            subtitle="restant ÷ dernière cadence du quart"
             {...common}
           />
         );

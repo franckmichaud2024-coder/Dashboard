@@ -23,6 +23,23 @@ const DASHBOARD_IMAGES_BUCKET = "dashboard-images";
 
 const UI_FONT = "Inter, Segoe UI, Roboto, Arial, sans-serif";
 
+const HISTORY_PASSWORD = "1Mixture2*";
+
+function validateHistoryAccess() {
+  const entered = window.prompt("Mot de passe requis pour accéder aux historiques :");
+
+  if (entered === HISTORY_PASSWORD) {
+    return true;
+  }
+
+  if (entered !== null) {
+    window.alert("Mot de passe invalide");
+  }
+
+  return false;
+}
+
+
 function cleanSupabaseUrl(value) {
   const raw = String(value || "").trim();
 
@@ -3174,11 +3191,26 @@ export default function App() {
     setRoute(path);
   }
 
+  function navigateHistoryRoute(path) {
+    if (!validateHistoryAccess()) return;
+    navigateRoute(path);
+  }
+
   useEffect(() => {
     const onPopState = () => setRoute(window.location.pathname);
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  useEffect(() => {
+    if (route === "/historique-jour" || route === "/historique-soir") {
+      if (!validateHistoryAccess()) {
+        window.history.replaceState({}, "", "/");
+        setRoute("/");
+      }
+    }
+  }, []);
+
 
   useEffect(() => {
     sessionRef.current = session;
@@ -3690,7 +3722,7 @@ export default function App() {
   }
 
   function zoomOut() {
-    setZoom((z) => Math.max(0.2, Number((z - 0.05).toFixed(2))));
+    setZoom((z) => Math.max(0.8, Number((z - 0.05).toFixed(2))));
   }
 
   function zoomIn() {
@@ -4776,7 +4808,7 @@ export default function App() {
                     Quart de soir
                   </Btn>
 <button
-                  onClick={() => navigateRoute("/historique-jour")}
+                  onClick={() => navigateHistoryRoute("/historique-jour")}
                   style={{
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
@@ -4797,7 +4829,7 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={() => navigateRoute("/historique-soir")}
+                  onClick={() => navigateHistoryRoute("/historique-soir")}
                   style={{
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
@@ -5141,7 +5173,7 @@ export default function App() {
 
                 <input
                   type="range"
-                  min="20"
+                  min="80"
                   max="120"
                   step="5"
                   value={Math.round(zoom * 100)}
