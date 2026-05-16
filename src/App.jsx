@@ -4907,16 +4907,19 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: shift === "jour" ? "1px solid rgba(57,232,255,0.75)" : "1px solid rgba(57,232,255,0.38)",
+                    border: shift === "jour" ? "2px solid rgba(57,232,255,0.98)" : "1px solid rgba(57,232,255,0.38)",
                     background: shift === "jour"
-                      ? "linear-gradient(180deg, rgba(12,72,98,0.92), rgba(5,25,45,0.96))"
+                      ? "linear-gradient(180deg, rgba(57,232,255,0.34), rgba(9,78,108,0.92))"
                       : "rgba(10,42,62,0.78)",
-                    color: "#39e8ff",
+                    color: shift === "jour" ? "#ffffff" : "#39e8ff",
                     fontSize: mobileCompact ? 12 : 13,
-                    fontWeight: 900,
+                    fontWeight: 950,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: shift === "jour" ? "0 0 20px rgba(57,232,255,0.18)" : "none",
+                    transform: shift === "jour" ? "translateY(-2px) scale(1.03)" : "none",
+                    boxShadow: shift === "jour"
+                      ? "0 0 0 3px rgba(57,232,255,0.15), 0 0 28px rgba(57,232,255,0.38), inset 0 0 18px rgba(255,255,255,0.10)"
+                      : "none",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -4951,16 +4954,19 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: shift === "soir" ? "1px solid rgba(255,216,77,0.75)" : "1px solid rgba(255,216,77,0.38)",
+                    border: shift === "soir" ? "2px solid rgba(255,216,77,0.98)" : "1px solid rgba(255,216,77,0.38)",
                     background: shift === "soir"
-                      ? "linear-gradient(180deg, rgba(90,68,14,0.82), rgba(5,25,45,0.96))"
+                      ? "linear-gradient(180deg, rgba(255,216,77,0.38), rgba(92,70,12,0.94))"
                       : "rgba(54,43,11,0.78)",
-                    color: "#ffd84d",
+                    color: shift === "soir" ? "#ffffff" : "#ffd84d",
                     fontSize: mobileCompact ? 12 : 13,
-                    fontWeight: 900,
+                    fontWeight: 950,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: shift === "soir" ? "0 0 20px rgba(255,216,77,0.18)" : "none",
+                    transform: shift === "soir" ? "translateY(-2px) scale(1.03)" : "none",
+                    boxShadow: shift === "soir"
+                      ? "0 0 0 3px rgba(255,216,77,0.15), 0 0 30px rgba(255,216,77,0.42), inset 0 0 18px rgba(255,255,255,0.10)"
+                      : "none",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
