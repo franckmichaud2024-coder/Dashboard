@@ -3577,6 +3577,10 @@ export default function App() {
             cloudState.data?.jour &&
             cloudState.data?.soir
           ) {
+            if (Date.now() - lastLocalDashboardEditRef.current < 1500) {
+              return;
+            }
+
             setShift(cloudState.shift);
             setStateByShift(cloudState.data);
 
@@ -3931,7 +3935,7 @@ export default function App() {
     [blocsAffiches]
   );
 
-  const capaciteQuartComplet = round((totalWorkMinutes(current.periodes) * 585) / 60);
+  const capaciteQuartComplet = round((totalWorkMinutes(current.periodes) * 600) / 60);
 
   const efficaciteQuartComplet =
     capaciteQuartComplet > 0
