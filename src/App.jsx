@@ -649,7 +649,7 @@ function yellowInputStyle(isMobile = false, fullWidth = false, compact = false) 
     border: "1px solid rgba(255,206,84,0.35)",
     background:
       "linear-gradient(180deg, rgba(72,56,16,0.85), rgba(52,40,10,0.92))",
-    color: "#39e8ff",
+    color: "#ffd84d",
     fontWeight: 900,
     textAlign: "center",
     boxSizing: "border-box",
@@ -2170,7 +2170,7 @@ function openHistoryGraphWindow(title, data) {
         <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
       <rect x="0" y="0" width="${width}" height="${height}" rx="26" fill="url(#bg)" />
-      <rect x="22" y="22" width="${width-44}" height="${height-44}" rx="22" fill="rgba(4,12,24,.55)" stroke="rgba(57,232,255,.20)" />
+      <rect x="22" y="22" width="${width-44}" height="${height-44}" rx="22" fill="rgba(4,12,24,.55)" stroke="rgba(255,216,77,.20)" />
       <text x="42" y="58" fill="#39e8ff" font-size="24" font-weight="950" letter-spacing="2">${safeTitle.toUpperCase()}</text>
       <text x="42" y="82" fill="#8ea9bf" font-size="13" font-weight="800">Graphique seulement — production réelle et efficacité enregistrées</text>
       <text x="${width-380}" y="58" fill="#46dbff" font-size="16" font-weight="900">Moyenne cochons : ${avgProduction}</text>
@@ -2188,8 +2188,8 @@ function openHistoryGraphWindow(title, data) {
 
   const html = `<!doctype html><html><head><meta charset="UTF-8"><title>${safeTitle}</title><style>
     html,body{margin:0;width:100%;height:100%;background:#020914;color:#eefaff;font-family:${UI_FONT};overflow:hidden;}
-    .wrap{width:100vw;height:100vh;padding:14px;box-sizing:border-box;background:radial-gradient(circle at top right, rgba(57,232,255,.16), transparent 34%), #020914;}
-    .empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#7f99ad;border:1px solid rgba(57,232,255,.2);border-radius:24px;}
+    .wrap{width:100vw;height:100vh;padding:14px;box-sizing:border-box;background:radial-gradient(circle at top right, rgba(255,216,77,.16), transparent 34%), #020914;}
+    .empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#7f99ad;border:1px solid rgba(255,216,77,.2);border-radius:24px;}
   </style></head><body><div class="wrap">${body}</div></body></html>`;
 
   const win = window.open("", "_blank", "width=1400,height=820");
@@ -2337,7 +2337,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
     <div style={{ ...cardStyle, padding: compact ? 10 : 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <div>
-          <div style={{ color: "#39e8ff", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <div style={{ color: "#ffd84d", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             {title}
           </div>
           <div style={{ color: "#7f99ad", fontSize: 11, fontWeight: 700, marginTop: 4 }}>
@@ -2550,9 +2550,9 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                                     height: 30,
                                     padding: "0 10px",
                                     borderRadius: 8,
-                                    border: "1px solid rgba(57,232,255,0.30)",
+                                    border: "1px solid rgba(255,216,77,0.30)",
                                     background: "rgba(12,72,98,0.36)",
-                                    color: "#39e8ff",
+                                    color: "#ffd84d",
                                     fontSize: 11,
                                     fontWeight: 900,
                                     cursor: "pointer",
@@ -2630,10 +2630,10 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                                         height: 54,
                                         position: "relative",
                                         borderRadius: 8,
-                                        border: "1px solid rgba(57,232,255,0.34)",
+                                        border: "1px solid rgba(255,216,77,0.34)",
                                         background:
                                           "linear-gradient(180deg, rgba(7,28,49,0.94), rgba(2,12,24,0.98))",
-                                        boxShadow: "0 0 16px rgba(57,232,255,0.10)",
+                                        boxShadow: "0 0 16px rgba(255,216,77,0.10)",
                                         overflow: "hidden",
                                       }}
                                       title={`Photo ${imgIndex + 1}`}
@@ -2774,10 +2774,10 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
             maxWidth: "94vw",
             maxHeight: "92vh",
             borderRadius: 16,
-            border: "1px solid rgba(57,232,255,0.35)",
+            border: "1px solid rgba(255,216,77,0.35)",
             background: "#020b16",
             padding: 12,
-            boxShadow: "0 0 40px rgba(57,232,255,0.20)",
+            boxShadow: "0 0 40px rgba(255,216,77,0.20)",
           }}
         >
           <button
@@ -2826,7 +2826,7 @@ function HistoryGraphOnly({ title, data, compact = false }) {
     <div style={{ width: "100%", minHeight: "100vh", background: "#020b16", padding: 18, boxSizing: "border-box" }}>
       <div style={{ ...cardStyle, height: "calc(100vh - 36px)", padding: 18, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <div style={{ color: "#39e8ff", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>{title}</div>
+          <div style={{ color: "#ffd84d", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>{title}</div>
           <button onClick={() => { navigateRoute("/"); }}>← Retour dashboard</button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -3109,7 +3109,7 @@ function ChangePasswordModal({ onClose }) {
           style={{
             fontSize: 20,
             fontWeight: 950,
-            color: "#39e8ff",
+            color: "#ffd84d",
             letterSpacing: "0.04em",
             textTransform: "uppercase",
             marginBottom: 8,
@@ -3204,7 +3204,7 @@ function ChangePasswordModal({ onClose }) {
               height: 38,
               padding: "0 16px",
               borderRadius: 10,
-              border: "1px solid rgba(57,232,255,0.42)",
+              border: "1px solid rgba(255,216,77,0.42)",
               background:
                 "linear-gradient(180deg, rgba(34,93,128,0.95), rgba(10,42,67,0.95))",
               color: "#fff",
@@ -4493,7 +4493,7 @@ export default function App() {
           width: "100%",
           minHeight: "100vh",
           background:
-            "radial-gradient(circle at top right, rgba(57,232,255,0.12), transparent 32%), #020b16",
+            "radial-gradient(circle at top right, rgba(255,216,77,0.12), transparent 32%), #020b16",
           padding: mobileCompact ? 10 : 18,
           boxSizing: "border-box",
         }}
@@ -4505,13 +4505,13 @@ export default function App() {
               height: 40,
               padding: "0 16px",
               borderRadius: 12,
-              border: "1px solid rgba(57,232,255,0.35)",
+              border: "1px solid rgba(255,216,77,0.35)",
               background: "linear-gradient(180deg, rgba(12,72,98,0.88), rgba(5,25,45,0.96))",
-              color: "#39e8ff",
+              color: "#ffd84d",
               fontSize: 13,
               fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 0 18px rgba(57,232,255,0.12)",
+              boxShadow: "0 0 18px rgba(255,216,77,0.12)",
               fontFamily: UI_FONT,
             }}
           >
@@ -4552,13 +4552,13 @@ export default function App() {
               height: 40,
               padding: "0 16px",
               borderRadius: 12,
-              border: "1px solid rgba(57,232,255,0.35)",
+              border: "1px solid rgba(255,216,77,0.35)",
               background: "linear-gradient(180deg, rgba(12,72,98,0.88), rgba(5,25,45,0.96))",
-              color: "#39e8ff",
+              color: "#ffd84d",
               fontSize: 13,
               fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 0 18px rgba(57,232,255,0.12)",
+              boxShadow: "0 0 18px rgba(255,216,77,0.12)",
               fontFamily: UI_FONT,
             }}
           >
@@ -4642,7 +4642,7 @@ export default function App() {
             right: 18px;
             top: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(57,232,255,0.95), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,216,77,0.95), transparent);
             opacity: 0.75;
             pointer-events: none;
             animation: scanLine 5.5s ease-in-out infinite;
@@ -4702,9 +4702,9 @@ export default function App() {
             height: 30,
             padding: "0 12px",
             borderRadius: 9,
-            border: "1px solid rgba(57,232,255,0.35)",
+            border: "1px solid rgba(255,216,77,0.35)",
             background: "linear-gradient(180deg, rgba(12,72,98,0.82), rgba(5,25,45,0.92))",
-            color: "#39e8ff",
+            color: "#ffd84d",
             fontSize: 11,
             fontWeight: 900,
             cursor: "pointer",
@@ -4760,7 +4760,7 @@ export default function App() {
           zIndex: -3,
           pointerEvents: "none",
           backgroundImage:
-            "linear-gradient(rgba(57,232,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(57,232,255,0.07) 1px, transparent 1px)",
+            "linear-gradient(rgba(255,216,77,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,216,77,0.07) 1px, transparent 1px)",
           backgroundSize: "42px 42px",
           maskImage: "linear-gradient(180deg, transparent 0%, #000 12%, #000 82%, transparent 100%)",
           animation: "gridDrift 18s linear infinite",
@@ -4778,7 +4778,7 @@ export default function App() {
           pointerEvents: "none",
           borderRadius: "50%",
           background:
-            "conic-gradient(from 0deg, transparent 0deg, rgba(57,232,255,0.22) 45deg, transparent 92deg, transparent 360deg)",
+            "conic-gradient(from 0deg, transparent 0deg, rgba(255,216,77,0.22) 45deg, transparent 92deg, transparent 360deg)",
           filter: "blur(1px)",
           animation: "radarSweep 14s linear infinite",
           opacity: 0.28,
@@ -4795,7 +4795,7 @@ export default function App() {
           zIndex: -2,
           pointerEvents: "none",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(57,232,255,0.18), transparent 62%)",
+          background: "radial-gradient(circle, rgba(255,216,77,0.18), transparent 62%)",
           filter: "blur(18px)",
           animation: "pulseGlow 7s ease-in-out infinite",
         }}
@@ -4911,12 +4911,12 @@ export default function App() {
                     background: shift === "jour"
                       ? "linear-gradient(180deg, rgba(72,56,16,0.86), rgba(5,25,45,0.96))"
                       : "rgba(54,43,11,0.78)",
-                    color: "#39e8ff",
+                    color: "#ffd84d",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 900,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: shift === "jour" ? "0 0 28px rgba(255,216,77,0.42), inset 0 0 16px rgba(255,255,255,0.08)" : "none",
+                    boxShadow: shift === "jour" ? "0 0 52px rgba(255,216,77,0.98), inset 0 0 16px rgba(255,255,255,0.08)" : "none",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -4930,14 +4930,14 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: "1px solid rgba(57,232,255,0.38)",
+                    border: "1px solid rgba(255,216,77,0.38)",
                     background: "linear-gradient(180deg, rgba(72,56,16,0.86), rgba(5,25,45,0.96))",
-                    color: "#39e8ff",
+                    color: "#ffd84d",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 900,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(255,216,77,0.16)",
+                    boxShadow: "0 0 42px rgba(255,216,77,0.72)",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -4951,16 +4951,16 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: shift === "soir" ? "2px solid rgba(57,232,255,0.95)" : "1px solid rgba(57,232,255,0.42)",
+                    border: shift === "soir" ? "2px solid rgba(255,216,77,0.95)" : "1px solid rgba(255,216,77,0.42)",
                     background: shift === "soir"
-                      ? "linear-gradient(180deg, rgba(12,72,98,0.92), rgba(5,25,45,0.96))"
+                      ? "linear-gradient(180deg, rgba(120,92,16,0.98), rgba(5,25,45,0.96))"
                       : "rgba(54,43,11,0.78)",
                     color: "#ffd84d",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 900,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: shift === "soir" ? "0 0 28px rgba(57,232,255,0.42), inset 0 0 16px rgba(255,255,255,0.08)" : "none",
+                    boxShadow: shift === "soir" ? "0 0 52px rgba(255,216,77,0.98), inset 0 0 16px rgba(255,255,255,0.08)" : "none",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -4975,13 +4975,13 @@ export default function App() {
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
                     border: "1px solid rgba(255,216,77,0.42)",
-                    background: "linear-gradient(180deg, rgba(12,72,98,0.92), rgba(5,25,45,0.96))",
+                    background: "linear-gradient(180deg, rgba(120,92,16,0.98), rgba(5,25,45,0.96))",
                     color: "#ffd84d",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 900,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(255,216,77,0.16)",
+                    boxShadow: "0 0 42px rgba(255,216,77,0.72)",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -5290,7 +5290,7 @@ export default function App() {
             <div>
               <div
                 style={{
-                  color: "#39e8ff",
+                  color: "#ffd84d",
                   fontSize: 13,
                   fontWeight: 900,
                   textTransform: "uppercase",
@@ -5349,7 +5349,7 @@ export default function App() {
           <div style={{ ...cardStyle, padding: sectionPadding, marginBottom: 10 }}>
             <div
               style={{
-                color: "#39e8ff",
+                color: "#ffd84d",
                 fontSize: 13,
                 fontWeight: 900,
                 textTransform: "uppercase",
@@ -5595,7 +5595,7 @@ export default function App() {
                   >
                     <div
                       style={{
-                        color: "#39e8ff",
+                        color: "#ffd84d",
                         fontSize: 11,
                         fontWeight: 900,
                         opacity: 0.75,
@@ -5719,7 +5719,7 @@ export default function App() {
                 <div style={{ ...cardStyle, padding: sectionPadding, marginBottom: 10 }}>
                   <div
                     style={{
-                      color: "#39e8ff",
+                      color: "#ffd84d",
                       fontSize: 13,
                       fontWeight: 900,
                       textTransform: "uppercase",
@@ -5844,7 +5844,7 @@ export default function App() {
               <div style={{ ...cardStyle, padding: sectionPadding, marginBottom: 10 }}>
                 <div
                   style={{
-                    color: "#39e8ff",
+                    color: "#ffd84d",
                     fontSize: 13,
                     fontWeight: 900,
                     textTransform: "uppercase",
@@ -6227,7 +6227,7 @@ export default function App() {
               </div>
 
               <div style={{ ...cardStyle, padding: sectionPadding, marginTop: 12, marginBottom: 10 }}>
-                <div style={{ color: "#39e8ff", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+                <div style={{ color: "#ffd84d", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
                   Enregistrer l'historique
                 </div>
 
@@ -6400,3 +6400,6 @@ export default function App() {
     </>
   );
 }
+
+
+/* FORCE SOIR BUTTONS BLEU FLASH */
