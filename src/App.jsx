@@ -3577,13 +3577,6 @@ export default function App() {
             cloudState.data?.jour &&
             cloudState.data?.soir
           ) {
-            // Empêche l'effet "j'écris puis ça s'efface" :
-            // on ignore les retours Supabase pendant une courte période
-            // juste après une modification locale.
-            if (Date.now() - lastLocalDashboardEditRef.current < 1500) {
-              return;
-            }
-
             setShift(cloudState.shift);
             setStateByShift(cloudState.data);
 
@@ -3681,7 +3674,6 @@ export default function App() {
 
   function updateShiftData(patch) {
     lastLocalDashboardEditRef.current = Date.now();
-
     setStateByShift((prev) => {
       const nextData = {
         ...prev,
