@@ -4901,13 +4901,30 @@ export default function App() {
                     alignItems: "center",
                   }}
                 >
-                  <Btn active={shift === "jour"} onClick={() => changeShift("jour")} compact={mobileCompact}>
-                    Quart de jour
-                  </Btn>
-                  <Btn active={shift === "soir"} onClick={() => changeShift("soir")} compact={mobileCompact}>
-                    Quart de soir
-                  </Btn>
-<button
+                  <button
+                  onClick={() => changeShift("jour")}
+                  style={{
+                    height: mobileCompact ? 38 : 44,
+                    padding: mobileCompact ? "0 14px" : "0 18px",
+                    borderRadius: 14,
+                    border: shift === "jour" ? "1px solid rgba(57,232,255,0.75)" : "1px solid rgba(57,232,255,0.38)",
+                    background: shift === "jour"
+                      ? "linear-gradient(180deg, rgba(12,72,98,0.92), rgba(5,25,45,0.96))"
+                      : "rgba(10,42,62,0.78)",
+                    color: "#39e8ff",
+                    fontSize: mobileCompact ? 12 : 13,
+                    fontWeight: 900,
+                    letterSpacing: "0.035em",
+                    cursor: "pointer",
+                    boxShadow: shift === "jour" ? "0 0 20px rgba(57,232,255,0.18)" : "none",
+                    whiteSpace: "nowrap",
+                    fontFamily: UI_FONT,
+                  }}
+                >
+                  Quart de jour
+                </button>
+
+                <button
                   onClick={() => navigateHistoryRoute("/historique-jour")}
                   style={{
                     height: mobileCompact ? 38 : 44,
@@ -4926,6 +4943,29 @@ export default function App() {
                   }}
                 >
                   📈 Historique jour
+                </button>
+
+                <button
+                  onClick={() => changeShift("soir")}
+                  style={{
+                    height: mobileCompact ? 38 : 44,
+                    padding: mobileCompact ? "0 14px" : "0 18px",
+                    borderRadius: 14,
+                    border: shift === "soir" ? "1px solid rgba(255,216,77,0.75)" : "1px solid rgba(255,216,77,0.38)",
+                    background: shift === "soir"
+                      ? "linear-gradient(180deg, rgba(90,68,14,0.82), rgba(5,25,45,0.96))"
+                      : "rgba(54,43,11,0.78)",
+                    color: "#ffd84d",
+                    fontSize: mobileCompact ? 12 : 13,
+                    fontWeight: 900,
+                    letterSpacing: "0.035em",
+                    cursor: "pointer",
+                    boxShadow: shift === "soir" ? "0 0 20px rgba(255,216,77,0.18)" : "none",
+                    whiteSpace: "nowrap",
+                    fontFamily: UI_FONT,
+                  }}
+                >
+                  Quart de soir
                 </button>
 
                 <button
