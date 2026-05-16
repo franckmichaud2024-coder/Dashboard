@@ -3250,6 +3250,7 @@ export default function App() {
   const [dashboardCloudLoaded, setDashboardCloudLoaded] = useState(false);
   const sessionRef = useRef(null);
   const saveDashboardTimerRef = useRef(null);
+  const lastLocalDashboardEditRef = useRef(0);
   const dashboardCloudLoadedRef = useRef(false);
   const { isMobile, isTablet } = useResponsive();
 
@@ -3495,7 +3496,7 @@ export default function App() {
     dashboardCloudLoadedRef.current = true;
   }
 
-  async function saveDashboardStateToSupabase(nextShift, nextData, delay = 350) {
+  async function saveDashboardStateToSupabase(nextShift, nextData, delay = 900) {
     const activeSession = sessionRef.current;
 
     if (!supabase || !activeSession?.user || !dashboardCloudLoadedRef.current) {
@@ -3576,6 +3577,13 @@ export default function App() {
             cloudState.data?.jour &&
             cloudState.data?.soir
           ) {
+            // Empêche l'effet "j'écris puis ça s'efface" :
+            // on ignore les retours Supabase pendant une courte période
+            // juste après une modification locale.
+            if (Date.now() - lastLocalDashboardEditRef.current < 1500) {
+              return;
+            }
+
             setShift(cloudState.shift);
             setStateByShift(cloudState.data);
 
@@ -3672,6 +3680,8 @@ export default function App() {
   }
 
   function updateShiftData(patch) {
+    lastLocalDashboardEditRef.current = Date.now();
+
     setStateByShift((prev) => {
       const nextData = {
         ...prev,
