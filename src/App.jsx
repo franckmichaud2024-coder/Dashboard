@@ -284,7 +284,7 @@ function sortByDateAsc(a, b) {
 function performanceColor(value) {
   const n = Number(value) || 0;
   if (n >= 95) return "#9df548";
-  if (n >= 85) return "#ffd84d";
+  if (n >= 85) return "#39e8ff";
   return "#ff4f67";
 }
 
@@ -605,7 +605,7 @@ const textSection = {
   fontWeight: 900,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "#39e8ff",
+  color: "#ffd84d",
 };
 
 const textLabel = {
@@ -649,7 +649,7 @@ function yellowInputStyle(isMobile = false, fullWidth = false, compact = false) 
     border: "1px solid rgba(255,206,84,0.35)",
     background:
       "linear-gradient(180deg, rgba(72,56,16,0.85), rgba(52,40,10,0.92))",
-    color: "#ffd84d",
+    color: "#39e8ff",
     fontWeight: 900,
     textAlign: "center",
     boxSizing: "border-box",
@@ -698,7 +698,7 @@ function Btn({ children, active, onClick, compact = false }) {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -722,7 +722,7 @@ function Btn({ children, active, onClick, compact = false }) {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -782,7 +782,7 @@ function Btn({ children, active, onClick, compact = false }) {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -892,12 +892,12 @@ function KPI({
     textValue.toUpperCase().includes("ALERTE") ||
     textValue.toUpperCase().includes("SOUS");
 
-  const statusColor = isAlert ? "#ff4f67" : highlight ? "#ffd84d" : valueColor;
-  const ledColor = isAlert ? "#ff4f67" : highlight ? "#ffd84d" : "#39e8ff";
+  const statusColor = isAlert ? "#ff4f67" : highlight ? "#39e8ff" : valueColor;
+  const ledColor = isAlert ? "#ff4f67" : highlight ? "#39e8ff" : "#ffd84d";
   const borderColor = isAlert
     ? "rgba(255,79,103,0.55)"
     : highlight
-      ? "rgba(255,216,77,0.40)"
+      ? "rgba(57,232,255,0.40)"
       : "rgba(70,219,255,0.24)";
 
   return (
@@ -914,7 +914,7 @@ function KPI({
         boxShadow: isAlert
           ? "0 0 0 1px rgba(255,255,255,0.025) inset, 0 0 28px rgba(255,79,103,0.20)"
           : highlight
-            ? "0 0 0 1px rgba(255,255,255,0.025) inset, 0 0 28px rgba(255,216,77,0.16)"
+            ? "0 0 0 1px rgba(255,255,255,0.025) inset, 0 0 28px rgba(57,232,255,0.16)"
             : "0 0 0 1px rgba(255,255,255,0.025) inset, 0 0 28px rgba(70,219,255,0.12)",
         fontFamily: UI_FONT,
       }}
@@ -970,7 +970,7 @@ function KPI({
         style={{
           minHeight: compact ? 34 : 36,
           borderRadius: 14,
-          border: "1px solid rgba(255,216,77,0.34)",
+          border: "1px solid rgba(57,232,255,0.34)",
           background:
             "linear-gradient(180deg, rgba(72,56,16,0.76), rgba(32,26,8,0.90))",
           color: statusColor,
@@ -1019,7 +1019,7 @@ function Gauge({ value, target = 92, compact = false }) {
     mainColor = "#9df548";
     statusText = "PERFORMANCE OK";
   } else if (pct >= target - 7) {
-    mainColor = "#ffd84d";
+    mainColor = "#39e8ff";
     statusText = "À SURVEILLER";
   }
 
@@ -1091,7 +1091,7 @@ function Gauge({ value, target = 92, compact = false }) {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -1115,7 +1115,7 @@ function Gauge({ value, target = 92, compact = false }) {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1175,7 +1175,7 @@ function Gauge({ value, target = 92, compact = false }) {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1272,7 +1272,7 @@ function Gauge({ value, target = 92, compact = false }) {
         <path
           d={arcPath(-27, -9)}
           fill="none"
-          stroke="#ffd84d"
+          stroke="#39e8ff"
           strokeWidth="18"
           strokeLinecap="butt"
           opacity="0.95"
@@ -1326,7 +1326,7 @@ function Gauge({ value, target = 92, compact = false }) {
         <text x="48" y="168" fill="#ff7b86" fontSize="10" fontWeight="800">
           0 %
         </text>
-        <text x="138" y="168" fill="#ffd84d" fontSize="10" fontWeight="800">
+        <text x="138" y="168" fill="#39e8ff" fontSize="10" fontWeight="800">
           85 %
         </text>
         <text x="246" y="168" fill="#9df548" fontSize="10" fontWeight="800">
@@ -1406,7 +1406,7 @@ function ChartTooltip({ active, payload, label }) {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -1430,7 +1430,7 @@ function ChartTooltip({ active, payload, label }) {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1490,7 +1490,7 @@ function ChartTooltip({ active, payload, label }) {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1549,7 +1549,7 @@ function ChartTooltip({ active, payload, label }) {
     >
       <div
         style={{
-          color: "#ffe98a",
+          color: "#7fefff",
           fontSize: 12,
           fontWeight: 900,
           marginBottom: 6,
@@ -1626,7 +1626,7 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -1650,7 +1650,7 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1710,7 +1710,7 @@ function NumberText({ children, color = "#eefaff", size = 13, weight = 800 }) {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1813,7 +1813,7 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -1837,7 +1837,7 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -1897,7 +1897,7 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -2050,7 +2050,7 @@ function MobileBlocCard({ bloc, updateBloc, mobileCompact }) {
         </div>
         <div>
           <div>Efficacité</div>
-          <div style={{ color: "#ffd84d", fontSize: 16 }}>
+          <div style={{ color: "#39e8ff", fontSize: 16 }}>
             {formatPercent(efficaciteCell)} %
           </div>
         </div>
@@ -2082,7 +2082,7 @@ function HistoryTooltip({ active, payload, label }) {
     >
       <div
         style={{
-          color: "#39e8ff",
+          color: "#ffd84d",
           fontSize: 12,
           fontWeight: 900,
           marginBottom: 8,
@@ -2095,7 +2095,7 @@ function HistoryTooltip({ active, payload, label }) {
         Cochons produits : {production}
       </div>
 
-      <div style={{ color: "#ffd84d", fontSize: 12, fontWeight: 800, marginTop: 4 }}>
+      <div style={{ color: "#39e8ff", fontSize: 12, fontWeight: 800, marginTop: 4 }}>
         Efficacité % : {formatPercent(efficacite)} %
       </div>
     </div>
@@ -2151,7 +2151,7 @@ function openHistoryGraphWindow(title, data) {
     return `
       <line x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}" stroke="rgba(127,165,196,.14)" stroke-dasharray="5 7" />
       <text x="${pad.left - 18}" y="${y + 4}" text-anchor="end" fill="#8ea9bf" font-size="13" font-weight="800">${leftVal}</text>
-      <text x="${width - pad.right + 18}" y="${y + 4}" text-anchor="start" fill="#ffd84d" font-size="13" font-weight="800">${rightVal}</text>`;
+      <text x="${width - pad.right + 18}" y="${y + 4}" text-anchor="start" fill="#39e8ff" font-size="13" font-weight="800">${rightVal}</text>`;
   }).join("");
 
   const labels = rows.map((d, i) => {
@@ -2160,7 +2160,7 @@ function openHistoryGraphWindow(title, data) {
     return `
       <text x="${x}" y="${height - 58}" text-anchor="middle" fill="#8ea9bf" font-size="12" font-weight="800">${date}</text>
       <circle cx="${x}" cy="${yLeft(d.production)}" r="5" fill="#46dbff" stroke="#00111f" stroke-width="2" />
-      <circle cx="${x}" cy="${yRight(d.efficacite)}" r="5" fill="#ffd84d" stroke="#00111f" stroke-width="2" />`;
+      <circle cx="${x}" cy="${yRight(d.efficacite)}" r="5" fill="#39e8ff" stroke="#00111f" stroke-width="2" />`;
   }).join("");
 
   const body = rows.length ? `
@@ -2170,26 +2170,26 @@ function openHistoryGraphWindow(title, data) {
         <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
       <rect x="0" y="0" width="${width}" height="${height}" rx="26" fill="url(#bg)" />
-      <rect x="22" y="22" width="${width-44}" height="${height-44}" rx="22" fill="rgba(4,12,24,.55)" stroke="rgba(57,232,255,.20)" />
-      <text x="42" y="58" fill="#39e8ff" font-size="24" font-weight="950" letter-spacing="2">${safeTitle.toUpperCase()}</text>
+      <rect x="22" y="22" width="${width-44}" height="${height-44}" rx="22" fill="rgba(4,12,24,.55)" stroke="rgba(255,216,77,.20)" />
+      <text x="42" y="58" fill="#ffd84d" font-size="24" font-weight="950" letter-spacing="2">${safeTitle.toUpperCase()}</text>
       <text x="42" y="82" fill="#8ea9bf" font-size="13" font-weight="800">Graphique seulement — production réelle et efficacité enregistrées</text>
       <text x="${width-380}" y="58" fill="#46dbff" font-size="16" font-weight="900">Moyenne cochons : ${avgProduction}</text>
-      <text x="${width-380}" y="82" fill="#ffd84d" font-size="16" font-weight="900">Vitesse moyenne : ${avgEff.toFixed(1)} %</text>
+      <text x="${width-380}" y="82" fill="#39e8ff" font-size="16" font-weight="900">Vitesse moyenne : ${avgEff.toFixed(1)} %</text>
       ${grid}
       <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + plotH}" stroke="rgba(142,169,191,.42)" />
-      <line x1="${width - pad.right}" y1="${pad.top}" x2="${width - pad.right}" y2="${pad.top + plotH}" stroke="rgba(255,216,77,.35)" />
+      <line x1="${width - pad.right}" y1="${pad.top}" x2="${width - pad.right}" y2="${pad.top + plotH}" stroke="rgba(57,232,255,.35)" />
       <line x1="${pad.left}" y1="${pad.top + plotH}" x2="${width - pad.right}" y2="${pad.top + plotH}" stroke="rgba(142,169,191,.30)" />
       <polyline points="${prodPoints}" fill="none" stroke="#46dbff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
-      <polyline points="${effPoints}" fill="none" stroke="#ffd84d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+      <polyline points="${effPoints}" fill="none" stroke="#39e8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
       ${labels}
       <circle cx="${width/2-130}" cy="${height-28}" r="6" fill="#46dbff"/><text x="${width/2-116}" y="${height-23}" fill="#d8f4ff" font-size="13" font-weight="900">Cochons produits</text>
-      <circle cx="${width/2+55}" cy="${height-28}" r="6" fill="#ffd84d"/><text x="${width/2+69}" y="${height-23}" fill="#d8f4ff" font-size="13" font-weight="900">Efficacité %</text>
+      <circle cx="${width/2+55}" cy="${height-28}" r="6" fill="#39e8ff"/><text x="${width/2+69}" y="${height-23}" fill="#d8f4ff" font-size="13" font-weight="900">Efficacité %</text>
     </svg>` : `<div class="empty">Aucun historique enregistré.</div>`;
 
   const html = `<!doctype html><html><head><meta charset="UTF-8"><title>${safeTitle}</title><style>
     html,body{margin:0;width:100%;height:100%;background:#020914;color:#eefaff;font-family:${UI_FONT};overflow:hidden;}
-    .wrap{width:100vw;height:100vh;padding:14px;box-sizing:border-box;background:radial-gradient(circle at top right, rgba(57,232,255,.16), transparent 34%), #020914;}
-    .empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#7f99ad;border:1px solid rgba(57,232,255,.2);border-radius:24px;}
+    .wrap{width:100vw;height:100vh;padding:14px;box-sizing:border-box;background:radial-gradient(circle at top right, rgba(255,216,77,.16), transparent 34%), #020914;}
+    .empty{height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#7f99ad;border:1px solid rgba(255,216,77,.2);border-radius:24px;}
   </style></head><body><div class="wrap">${body}</div></body></html>`;
 
   const win = window.open("", "_blank", "width=1400,height=820");
@@ -2337,7 +2337,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
     <div style={{ ...cardStyle, padding: compact ? 10 : 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <div>
-          <div style={{ color: "#39e8ff", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <div style={{ color: "#ffd84d", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             {title}
           </div>
           <div style={{ color: "#7f99ad", fontSize: 11, fontWeight: 700, marginTop: 4 }}>
@@ -2412,7 +2412,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
 
         <div
           style={{
-            border: "1px solid rgba(255,216,77,0.16)",
+            border: "1px solid rgba(57,232,255,0.16)",
             borderRadius: 14,
             padding: "12px 14px",
             background:
@@ -2442,7 +2442,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
               letterSpacing: "0.02em",
               lineHeight: 1,
               textAlign: "center",
-              textShadow: "0 0 16px rgba(255,216,77,0.26)",
+              textShadow: "0 0 16px rgba(57,232,255,0.26)",
             }}
           >
             {formatPercent(moyenneEfficacite)} %
@@ -2462,11 +2462,11 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                 <CartesianGrid stroke="rgba(127,165,196,0.10)" strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fill: "#8ea9bf", fontSize: 11 }} />
                 <YAxis yAxisId="left" domain={[0, Math.ceil(maxProduction / 500) * 500]} tick={{ fill: "#8ea9bf", fontSize: 11 }} />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 120]} tick={{ fill: "#ffd84d", fontSize: 11 }} />
+                <YAxis yAxisId="right" orientation="right" domain={[0, 120]} tick={{ fill: "#39e8ff", fontSize: 11 }} />
                 <Tooltip content={<HistoryTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: "#b8d2e3", paddingTop: 6 }} />
                 <Area yAxisId="left" type="monotone" dataKey="production" name="Cochons produits" stroke="#46dbff" fill="#46dbff" fillOpacity={0.12} strokeWidth={2.5} />
-                <Line yAxisId="right" type="monotone" dataKey="efficacite" name="Efficacité %" stroke="#ffd84d" strokeWidth={3} dot={<HistoryDot />} />
+                <Line yAxisId="right" type="monotone" dataKey="efficacite" name="Efficacité %" stroke="#39e8ff" strokeWidth={3} dot={<HistoryDot />} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -2506,7 +2506,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                           resize: "vertical",
                           borderRadius: 9,
                           border: commentStatus[row.id] === "dirty"
-                            ? "1px solid rgba(255,216,77,0.45)"
+                            ? "1px solid rgba(57,232,255,0.45)"
                             : "1px solid rgba(120,190,255,0.14)",
                           background: "rgba(6,18,34,0.82)",
                           color: "#eefaff",
@@ -2550,9 +2550,9 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                                     height: 30,
                                     padding: "0 10px",
                                     borderRadius: 8,
-                                    border: "1px solid rgba(57,232,255,0.30)",
+                                    border: "1px solid rgba(255,216,77,0.30)",
                                     background: "rgba(12,72,98,0.36)",
-                                    color: "#39e8ff",
+                                    color: "#ffd84d",
                                     fontSize: 11,
                                     fontWeight: 900,
                                     cursor: "pointer",
@@ -2581,9 +2581,9 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                                         height: 30,
                                         padding: "0 9px",
                                         borderRadius: 8,
-                                        border: "1px solid rgba(255,216,77,0.24)",
+                                        border: "1px solid rgba(57,232,255,0.24)",
                                         background: "rgba(74,56,12,0.30)",
-                                        color: "#ffd84d",
+                                        color: "#39e8ff",
                                         fontSize: 11,
                                         fontWeight: 900,
                                       }}
@@ -2630,10 +2630,10 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                                         height: 54,
                                         position: "relative",
                                         borderRadius: 8,
-                                        border: "1px solid rgba(57,232,255,0.34)",
+                                        border: "1px solid rgba(255,216,77,0.34)",
                                         background:
                                           "linear-gradient(180deg, rgba(7,28,49,0.94), rgba(2,12,24,0.98))",
-                                        boxShadow: "0 0 16px rgba(57,232,255,0.10)",
+                                        boxShadow: "0 0 16px rgba(255,216,77,0.10)",
                                         overflow: "hidden",
                                       }}
                                       title={`Photo ${imgIndex + 1}`}
@@ -2671,7 +2671,7 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
                                           height: 17,
                                           borderRadius: 999,
                                           background: "rgba(0,0,0,0.72)",
-                                          color: "#ffd84d",
+                                          color: "#39e8ff",
                                           fontSize: 10,
                                           fontWeight: 900,
                                           display: "flex",
@@ -2774,10 +2774,10 @@ function HistoryChart({ title, data, onDelete, onClear, onCommentSave, onPhotosU
             maxWidth: "94vw",
             maxHeight: "92vh",
             borderRadius: 16,
-            border: "1px solid rgba(57,232,255,0.35)",
+            border: "1px solid rgba(255,216,77,0.35)",
             background: "#020b16",
             padding: 12,
-            boxShadow: "0 0 40px rgba(57,232,255,0.20)",
+            boxShadow: "0 0 40px rgba(255,216,77,0.20)",
           }}
         >
           <button
@@ -2826,7 +2826,7 @@ function HistoryGraphOnly({ title, data, compact = false }) {
     <div style={{ width: "100%", minHeight: "100vh", background: "#020b16", padding: 18, boxSizing: "border-box" }}>
       <div style={{ ...cardStyle, height: "calc(100vh - 36px)", padding: 18, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <div style={{ color: "#39e8ff", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>{title}</div>
+          <div style={{ color: "#ffd84d", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>{title}</div>
           <button onClick={() => { navigateRoute("/"); }}>← Retour dashboard</button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -2835,11 +2835,11 @@ function HistoryGraphOnly({ title, data, compact = false }) {
               <CartesianGrid stroke="rgba(127,165,196,0.10)" strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={{ fill: "#8ea9bf", fontSize: 12 }} />
               <YAxis yAxisId="left" domain={[0, Math.ceil(maxProduction / 500) * 500]} tick={{ fill: "#8ea9bf", fontSize: 12 }} />
-              <YAxis yAxisId="right" orientation="right" domain={[0, 120]} tick={{ fill: "#ffd84d", fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 120]} tick={{ fill: "#39e8ff", fontSize: 12 }} />
               <Tooltip content={<HistoryTooltip />} />
               <Legend wrapperStyle={{ fontSize: 13, color: "#b8d2e3", paddingTop: 12 }} />
               <Area yAxisId="left" type="monotone" dataKey="production" name="Cochons produits" stroke="#46dbff" fill="#46dbff" fillOpacity={0.12} strokeWidth={3} />
-              <Line yAxisId="right" type="monotone" dataKey="efficacite" name="Efficacité %" stroke="#ffd84d" strokeWidth={3.5} dot={<HistoryDot />} />
+              <Line yAxisId="right" type="monotone" dataKey="efficacite" name="Efficacité %" stroke="#39e8ff" strokeWidth={3.5} dot={<HistoryDot />} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -3015,9 +3015,9 @@ function LoginScreen() {
           style={{
             minHeight: 38,
             borderRadius: 12,
-            border: "1px solid rgba(255,216,77,0.20)",
+            border: "1px solid rgba(57,232,255,0.20)",
             background: "rgba(72,56,16,0.28)",
-            color: "#ffd84d",
+            color: "#39e8ff",
             fontWeight: 900,
             display: "flex",
             alignItems: "center",
@@ -3109,7 +3109,7 @@ function ChangePasswordModal({ onClose }) {
           style={{
             fontSize: 20,
             fontWeight: 1000,
-            color: "#39e8ff",
+            color: "#ffd84d",
             letterSpacing: "0.04em",
             textTransform: "uppercase",
             marginBottom: 8,
@@ -3204,7 +3204,7 @@ function ChangePasswordModal({ onClose }) {
               height: 38,
               padding: "0 16px",
               borderRadius: 10,
-              border: "1px solid rgba(57,232,255,0.38)",
+              border: "1px solid rgba(255,216,77,0.38)",
               background:
                 "linear-gradient(180deg, rgba(34,93,128,0.95), rgba(10,42,67,0.95))",
               color: "#fff",
@@ -3946,7 +3946,7 @@ export default function App() {
     efficaciteQuartComplet >= 100
       ? "#9df548"
       : efficaciteQuartComplet >= 95
-      ? "#ffd84d"
+      ? "#39e8ff"
       : "#ff4f67";
 
   const projectionFinQuart = Number(
@@ -3971,7 +3971,7 @@ export default function App() {
     statutUsine === "EN AVANCE"
       ? "#9df548"
       : statutUsine === "À SURVEILLER"
-      ? "#ffd84d"
+      ? "#39e8ff"
       : "#ff4f67";
 
   const alerteDerive =
@@ -4017,7 +4017,7 @@ export default function App() {
     efficaciteTheoriqueReel >= 100
       ? "#9df548"
       : efficaciteTheoriqueReel >= 95
-      ? "#ffd84d"
+      ? "#39e8ff"
       : "#ff4f67";
 
   const chartData = useMemo(() => {
@@ -4335,7 +4335,7 @@ export default function App() {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -4359,7 +4359,7 @@ export default function App() {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -4419,7 +4419,7 @@ export default function App() {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -4493,7 +4493,7 @@ export default function App() {
           width: "100%",
           minHeight: "100vh",
           background:
-            "radial-gradient(circle at top right, rgba(57,232,255,0.12), transparent 32%), #020b16",
+            "radial-gradient(circle at top right, rgba(255,216,77,0.12), transparent 32%), #020b16",
           padding: mobileCompact ? 10 : 18,
           boxSizing: "border-box",
         }}
@@ -4505,13 +4505,13 @@ export default function App() {
               height: 40,
               padding: "0 16px",
               borderRadius: 12,
-              border: "1px solid rgba(57,232,255,0.35)",
+              border: "1px solid rgba(255,216,77,0.35)",
               background: "linear-gradient(180deg, rgba(12,72,98,0.88), rgba(5,25,45,0.96))",
-              color: "#39e8ff",
+              color: "#ffd84d",
               fontSize: 13,
               fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 0 18px rgba(57,232,255,0.12)",
+              boxShadow: "0 0 18px rgba(255,216,77,0.12)",
               fontFamily: UI_FONT,
             }}
           >
@@ -4540,7 +4540,7 @@ export default function App() {
           width: "100%",
           minHeight: "100vh",
           background:
-            "radial-gradient(circle at top right, rgba(255,216,77,0.10), transparent 32%), #020b16",
+            "radial-gradient(circle at top right, rgba(57,232,255,0.10), transparent 32%), #020b16",
           padding: mobileCompact ? 10 : 18,
           boxSizing: "border-box",
         }}
@@ -4552,13 +4552,13 @@ export default function App() {
               height: 40,
               padding: "0 16px",
               borderRadius: 12,
-              border: "1px solid rgba(57,232,255,0.35)",
+              border: "1px solid rgba(255,216,77,0.35)",
               background: "linear-gradient(180deg, rgba(12,72,98,0.88), rgba(5,25,45,0.96))",
-              color: "#39e8ff",
+              color: "#ffd84d",
               fontSize: 13,
               fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 0 18px rgba(57,232,255,0.12)",
+              boxShadow: "0 0 18px rgba(255,216,77,0.12)",
               fontFamily: UI_FONT,
             }}
           >
@@ -4642,7 +4642,7 @@ export default function App() {
             right: 18px;
             top: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(57,232,255,0.95), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,216,77,0.95), transparent);
             opacity: 0.75;
             pointer-events: none;
             animation: scanLine 5.5s ease-in-out infinite;
@@ -4702,9 +4702,9 @@ export default function App() {
             height: 30,
             padding: "0 12px",
             borderRadius: 9,
-            border: "1px solid rgba(57,232,255,0.35)",
+            border: "1px solid rgba(255,216,77,0.35)",
             background: "linear-gradient(180deg, rgba(12,72,98,0.82), rgba(5,25,45,0.92))",
-            color: "#39e8ff",
+            color: "#ffd84d",
             fontSize: 11,
             fontWeight: 900,
             cursor: "pointer",
@@ -4739,7 +4739,7 @@ export default function App() {
         position: "relative",
         isolation: "isolate",
         background:
-          "radial-gradient(circle at 18% 8%, rgba(0,220,255,0.16), transparent 24%), radial-gradient(circle at 82% 14%, rgba(255,216,77,0.08), transparent 20%), radial-gradient(circle at 50% 72%, rgba(30,90,255,0.10), transparent 34%), linear-gradient(180deg, #020711 0%, #00040a 52%, #020914 100%)",
+          "radial-gradient(circle at 18% 8%, rgba(0,220,255,0.16), transparent 24%), radial-gradient(circle at 82% 14%, rgba(57,232,255,0.08), transparent 20%), radial-gradient(circle at 50% 72%, rgba(30,90,255,0.10), transparent 34%), linear-gradient(180deg, #020711 0%, #00040a 52%, #020914 100%)",
         color: "#eefaff",
         fontFamily: UI_FONT,
         WebkitFontSmoothing: "antialiased",
@@ -4760,7 +4760,7 @@ export default function App() {
           zIndex: -3,
           pointerEvents: "none",
           backgroundImage:
-            "linear-gradient(rgba(57,232,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(57,232,255,0.07) 1px, transparent 1px)",
+            "linear-gradient(rgba(255,216,77,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,216,77,0.07) 1px, transparent 1px)",
           backgroundSize: "42px 42px",
           maskImage: "linear-gradient(180deg, transparent 0%, #000 12%, #000 82%, transparent 100%)",
           animation: "gridDrift 18s linear infinite",
@@ -4778,7 +4778,7 @@ export default function App() {
           pointerEvents: "none",
           borderRadius: "50%",
           background:
-            "conic-gradient(from 0deg, transparent 0deg, rgba(57,232,255,0.22) 45deg, transparent 92deg, transparent 360deg)",
+            "conic-gradient(from 0deg, transparent 0deg, rgba(255,216,77,0.22) 45deg, transparent 92deg, transparent 360deg)",
           filter: "blur(1px)",
           animation: "radarSweep 14s linear infinite",
           opacity: 0.28,
@@ -4795,7 +4795,7 @@ export default function App() {
           zIndex: -2,
           pointerEvents: "none",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(57,232,255,0.18), transparent 62%)",
+          background: "radial-gradient(circle, rgba(255,216,77,0.18), transparent 62%)",
           filter: "blur(18px)",
           animation: "pulseGlow 7s ease-in-out infinite",
         }}
@@ -4907,9 +4907,9 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: shift === "jour" ? "2px solid rgba(57,232,255,0.98)" : "1px solid rgba(57,232,255,0.38)",
+                    border: shift === "jour" ? "2px solid rgba(255,216,77,0.98)" : "1px solid rgba(255,216,77,0.38)",
                     background: shift === "jour"
-                      ? "linear-gradient(180deg, rgba(57,232,255,0.78), rgba(15,110,150,0.98))"
+                      ? "linear-gradient(180deg, rgba(255,216,77,0.78), rgba(15,110,150,0.98))"
                       : "rgba(10,42,62,0.78)",
                     color: shift === "jour" ? "#ffffff" : "#7fefff",
                     fontSize: mobileCompact ? 12 : 13,
@@ -4918,13 +4918,13 @@ export default function App() {
                     cursor: "pointer",
                     transform: shift === "jour" ? "translateY(-4px) scale(1.08)" : "none",
                     boxShadow: shift === "jour"
-                      ? "0 0 0 3px rgba(57,232,255,0.15), 0 0 42px rgba(57,232,255,0.95), inset 0 0 18px rgba(255,255,255,0.10)"
+                      ? "0 0 0 3px rgba(255,216,77,0.15), 0 0 42px rgba(255,216,77,0.95), inset 0 0 18px rgba(255,255,255,0.10)"
                       : "none",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
                 >
-                  Quart de jour 🔵
+                  Quart de jour ☀️
                 </button>
 
                 <button
@@ -4933,14 +4933,14 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: "1px solid rgba(57,232,255,0.38)",
+                    border: "1px solid rgba(255,216,77,0.38)",
                     background: "linear-gradient(180deg, rgba(12,72,98,0.92), rgba(5,25,45,0.96))",
-                    color: "#39e8ff",
+                    color: "#ffd84d",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 900,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(57,232,255,0.14)",
+                    boxShadow: "0 0 20px rgba(255,216,77,0.14)",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -4954,18 +4954,18 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: shift === "soir" ? "2px solid rgba(255,216,77,0.98)" : "1px solid rgba(255,216,77,0.38)",
+                    border: shift === "soir" ? "2px solid rgba(57,232,255,0.98)" : "1px solid rgba(57,232,255,0.38)",
                     background: shift === "soir"
-                      ? "linear-gradient(180deg, rgba(255,216,77,0.82), rgba(120,92,16,0.98))"
+                      ? "linear-gradient(180deg, rgba(57,232,255,0.82), rgba(120,92,16,0.98))"
                       : "rgba(54,43,11,0.78)",
-                    color: shift === "soir" ? "#ffffff" : "#ffe98a",
+                    color: shift === "soir" ? "#ffffff" : "#7fefff",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 1000,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
                     transform: shift === "soir" ? "translateY(-4px) scale(1.08)" : "none",
                     boxShadow: shift === "soir"
-                      ? "0 0 0 3px rgba(255,216,77,0.15), 0 0 46px rgba(255,216,77,0.98), inset 0 0 18px rgba(255,255,255,0.10)"
+                      ? "0 0 0 3px rgba(57,232,255,0.15), 0 0 46px rgba(57,232,255,0.98), inset 0 0 18px rgba(255,255,255,0.10)"
                       : "none",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
@@ -4980,14 +4980,14 @@ export default function App() {
                     height: mobileCompact ? 38 : 44,
                     padding: mobileCompact ? "0 14px" : "0 18px",
                     borderRadius: 14,
-                    border: "1px solid rgba(255,216,77,0.38)",
+                    border: "1px solid rgba(57,232,255,0.38)",
                     background: "linear-gradient(180deg, rgba(90,68,14,0.82), rgba(5,25,45,0.96))",
-                    color: "#ffd84d",
+                    color: "#39e8ff",
                     fontSize: mobileCompact ? 12 : 13,
                     fontWeight: 900,
                     letterSpacing: "0.035em",
                     cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(255,216,77,0.12)",
+                    boxShadow: "0 0 20px rgba(57,232,255,0.12)",
                     whiteSpace: "nowrap",
                     fontFamily: UI_FONT,
                   }}
@@ -5076,9 +5076,9 @@ export default function App() {
                       width: 13,
                       height: 13,
                       borderRadius: "50%",
-                      background: clockPaused ? "#ffd84d" : "#2fe1ff",
+                      background: clockPaused ? "#39e8ff" : "#2fe1ff",
                       boxShadow: clockPaused
-                        ? "0 0 18px rgba(255,216,77,0.95)"
+                        ? "0 0 18px rgba(57,232,255,0.95)"
                         : "0 0 18px rgba(47,225,255,0.95)",
                     }}
                   />
@@ -5098,7 +5098,7 @@ export default function App() {
                     cursor: "pointer",
                     background: clockPaused
                       ? "linear-gradient(135deg, rgba(157,245,72,0.25), rgba(47,225,255,0.16))"
-                      : "linear-gradient(135deg, rgba(255,216,77,0.22), rgba(255,79,103,0.14))",
+                      : "linear-gradient(135deg, rgba(57,232,255,0.22), rgba(255,79,103,0.14))",
                     color: "#f3fbff",
                     fontWeight: 900,
                     letterSpacing: "0.04em",
@@ -5115,7 +5115,7 @@ export default function App() {
                       zIndex: 1,
                       marginTop: 8,
                       textAlign: "center",
-                      color: "#ffd84d",
+                      color: "#39e8ff",
                       fontSize: 12,
                       fontWeight: 800,
                     }}
@@ -5175,12 +5175,12 @@ export default function App() {
                       padding: "0 12px",
                       borderRadius: 999,
                       border: clockMode === "simulated"
-                        ? "1px solid rgba(255,216,77,0.65)"
+                        ? "1px solid rgba(57,232,255,0.65)"
                         : "1px solid rgba(255,255,255,0.14)",
                       background: clockMode === "simulated"
-                        ? "rgba(255,216,77,0.18)"
+                        ? "rgba(57,232,255,0.18)"
                         : "rgba(20,34,55,0.72)",
-                      color: clockMode === "simulated" ? "#ffd84d" : "#eefaff",
+                      color: clockMode === "simulated" ? "#39e8ff" : "#eefaff",
                       fontSize: 11,
                       fontWeight: 900,
                       cursor: "pointer",
@@ -5203,9 +5203,9 @@ export default function App() {
                         height: 30,
                         width: 110,
                         borderRadius: 999,
-                        border: "1px solid rgba(255,216,77,0.42)",
+                        border: "1px solid rgba(57,232,255,0.42)",
                         background: "rgba(72,56,16,0.62)",
-                        color: "#ffd84d",
+                        color: "#39e8ff",
                         fontSize: 12,
                         fontWeight: 900,
                         padding: "0 10px",
@@ -5296,7 +5296,7 @@ export default function App() {
             <div>
               <div
                 style={{
-                  color: "#39e8ff",
+                  color: "#ffd84d",
                   fontSize: 13,
                   fontWeight: 900,
                   textTransform: "uppercase",
@@ -5334,7 +5334,7 @@ export default function App() {
                 <div
                   style={{
                     textAlign: "center",
-                    color: "#ffd84d",
+                    color: "#39e8ff",
                     fontWeight: 900,
                     fontSize: 14,
                   }}
@@ -5355,7 +5355,7 @@ export default function App() {
           <div style={{ ...cardStyle, padding: sectionPadding, marginBottom: 10 }}>
             <div
               style={{
-                color: "#39e8ff",
+                color: "#ffd84d",
                 fontSize: 13,
                 fontWeight: 900,
                 textTransform: "uppercase",
@@ -5442,7 +5442,7 @@ export default function App() {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -5466,7 +5466,7 @@ export default function App() {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -5526,7 +5526,7 @@ export default function App() {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -5587,7 +5587,7 @@ export default function App() {
                       gap: 10,
                       border:
                         draggedKpi === key
-                          ? "1px solid rgba(255,216,77,0.75)"
+                          ? "1px solid rgba(57,232,255,0.75)"
                           : "1px solid rgba(74,190,255,0.12)",
                       borderRadius: 14,
                       padding: "10px 12px",
@@ -5596,12 +5596,12 @@ export default function App() {
                           ? "linear-gradient(180deg, rgba(72,56,16,0.55), rgba(42,33,12,0.65))"
                           : "linear-gradient(180deg, rgba(7,19,36,0.78), rgba(4,12,24,0.88))",
                       cursor: "grab",
-                      boxShadow: draggedKpi === key ? "0 0 18px rgba(255,216,77,0.18)" : "none",
+                      boxShadow: draggedKpi === key ? "0 0 18px rgba(57,232,255,0.18)" : "none",
                     }}
                   >
                     <div
                       style={{
-                        color: "#39e8ff",
+                        color: "#ffd84d",
                         fontSize: 11,
                         fontWeight: 900,
                         opacity: 0.75,
@@ -5640,9 +5640,9 @@ export default function App() {
                         width: mobileCompact ? "100%" : "auto",
                         minWidth: 92,
                         borderRadius: 999,
-                        border: "1px solid rgba(255,216,77,0.28)",
+                        border: "1px solid rgba(57,232,255,0.28)",
                         background: "linear-gradient(180deg, rgba(72,56,16,0.72), rgba(42,33,12,0.86))",
-                        color: "#ffd84d",
+                        color: "#39e8ff",
                         fontSize: 11,
                         fontWeight: 900,
                         padding: "0 8px",
@@ -5725,7 +5725,7 @@ export default function App() {
                 <div style={{ ...cardStyle, padding: sectionPadding, marginBottom: 10 }}>
                   <div
                     style={{
-                      color: "#39e8ff",
+                      color: "#ffd84d",
                       fontSize: 13,
                       fontWeight: 900,
                       textTransform: "uppercase",
@@ -5850,7 +5850,7 @@ export default function App() {
               <div style={{ ...cardStyle, padding: sectionPadding, marginBottom: 10 }}>
                 <div
                   style={{
-                    color: "#39e8ff",
+                    color: "#ffd84d",
                     fontSize: 13,
                     fontWeight: 900,
                     textTransform: "uppercase",
@@ -5962,7 +5962,7 @@ export default function App() {
             title="Projection fin de quart"
             value={projectionFinQuart}
             subtitle="cumul projeté à la fin du quart"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             highlight
             {...common}
           />
@@ -5986,7 +5986,7 @@ export default function App() {
             title="Efficacité depuis début du quart"
             value={`${formatPercent(efficaciteDepuisDebutQuart)} %`}
             subtitle="basée sur le champ nombre réellement produit"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -6046,7 +6046,7 @@ export default function App() {
             title="Efficacité globale pondérée"
             value={`${formatPercent(efficacitePonderee)} %`}
             subtitle="basée sur les blocs réels remplis"
-            valueColor="#ffd84d"
+            valueColor="#39e8ff"
             {...common}
           />
         );
@@ -6135,13 +6135,13 @@ export default function App() {
 
                             <div style={cellStyle(b.isPrediction)}>
                               <div style={{ display: "grid", gap: 2 }}>
-                                <NumberText color={b.isPrediction || b.isEstimated ? "#ffd84d" : "#eefaff"} size={b.isPrediction ? 20 : 13} weight={900}>
+                                <NumberText color={b.isPrediction || b.isEstimated ? "#39e8ff" : "#eefaff"} size={b.isPrediction ? 20 : 13} weight={900}>
                                   {reelBlocCell}
                                 </NumberText>
                                 {b.isAverageSummary ? (
-                                  <span style={{ fontSize: 9, color: "#ffd84d", fontWeight: 900 }}>MOYENNE</span>
+                                  <span style={{ fontSize: 9, color: "#39e8ff", fontWeight: 900 }}>MOYENNE</span>
                                 ) : b.isEstimated ? (
-                                  <span style={{ fontSize: 9, color: "#ffd84d", fontWeight: 900 }}>ESTIMÉ</span>
+                                  <span style={{ fontSize: 9, color: "#39e8ff", fontWeight: 900 }}>ESTIMÉ</span>
                                 ) : null}
                               </div>
                             </div>
@@ -6153,7 +6153,7 @@ export default function App() {
                             </div>
 
                             <div style={cellStyle(b.isPrediction)}>
-                              <NumberText color="#ffd84d" size={13} weight={900}>
+                              <NumberText color="#39e8ff" size={13} weight={900}>
                                 {formatPercent(efficaciteCell)} %
                               </NumberText>
                             </div>
@@ -6233,7 +6233,7 @@ export default function App() {
               </div>
 
               <div style={{ ...cardStyle, padding: sectionPadding, marginTop: 12, marginBottom: 10 }}>
-                <div style={{ color: "#39e8ff", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+                <div style={{ color: "#ffd84d", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
                   Enregistrer l'historique
                 </div>
 
@@ -6261,11 +6261,11 @@ export default function App() {
                           right: 14,
                           top: "50%",
                           transform: "translateY(-50%)",
-                          color: "#ffd84d",
+                          color: "#39e8ff",
                           fontSize: 18,
                           fontWeight: 900,
                           pointerEvents: "none",
-                          filter: "drop-shadow(0 0 6px rgba(255,216,77,0.45))",
+                          filter: "drop-shadow(0 0 6px rgba(57,232,255,0.45))",
                         }}
                       >
                         📅
@@ -6307,7 +6307,7 @@ export default function App() {
                           border: "none",
                           outline: "none",
                           background: "transparent",
-                          color: "#ffd84d",
+                          color: "#39e8ff",
                           textAlign: "right",
                           fontWeight: 900,
                           fontSize: mobileCompact ? 15 : 16,
@@ -6327,7 +6327,7 @@ export default function App() {
                       />
                       <span
                         style={{
-                          color: "#ffd84d",
+                          color: "#39e8ff",
                           fontWeight: 900,
                           fontSize: mobileCompact ? 15 : 16,
                           fontFamily: UI_FONT,
